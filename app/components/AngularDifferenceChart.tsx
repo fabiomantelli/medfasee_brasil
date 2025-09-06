@@ -208,17 +208,24 @@ const AngularDifferenceChart: React.FC<AngularDifferenceChartProps> = ({ pmuMeas
   }
 
   return (
-    <div className="flex-1 bg-gray-800 rounded-lg p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-white">Diferença Angular</h2>
+    <div className="h-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-2 sm:p-4 flex flex-col">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0 flex-shrink-0">
+        <div>
+          <h3 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-1">
+            Diferença Angular das PMUs (Ref: {availablePMUs.find(p => p.pmuId === referencePMU)?.pmuName || referencePMU})
+          </h3>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            360°
+          </p>
+        </div>
         
         {/* Seletor de PMU de referência */}
         <div className="flex items-center space-x-2">
-          <label className="text-white text-sm">PMU Referência:</label>
+          <label className="text-gray-700 dark:text-gray-300 text-sm font-medium">PMU Referência:</label>
           <select
             value={referencePMU}
             onChange={(e) => setReferencePMU(e.target.value)}
-            className="bg-gray-700 text-white px-3 py-1 rounded text-sm border border-gray-600 focus:border-blue-500 focus:outline-none"
+            className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 rounded-lg text-sm border border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:outline-none shadow-sm"
           >
             {availablePMUs.map(pmu => (
               <option key={pmu.pmuId} value={pmu.pmuId}>
@@ -267,14 +274,14 @@ const AngularDifferenceChart: React.FC<AngularDifferenceChartProps> = ({ pmuMeas
         </div>
       </div>
 
-      <div className="relative">
+      <div className="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-xl p-2 sm:p-4 border border-slate-300 dark:border-slate-600 shadow-inner overflow-hidden flex items-center justify-center">
         {loading && (
           <div className="absolute inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-10 rounded">
             <div className="text-white">Carregando dados...</div>
           </div>
         )}
         
-        <div className="w-full h-96">
+        <div className="w-full h-full">
           <Plot
             data={plotData}
             layout={layout}
@@ -285,10 +292,20 @@ const AngularDifferenceChart: React.FC<AngularDifferenceChartProps> = ({ pmuMeas
       </div>
 
       {/* Informações adicionais */}
-      <div className="mt-4 text-sm text-gray-300">
-        <p>• Magnitudes normalizadas em pu (por unidade)</p>
-        <p>• Ângulos relativos à PMU de referência: <span className="text-blue-400">{availablePMUs.find(p => p.pmuId === referencePMU)?.pmuName || referencePMU}</span></p>
-        <p>• Dados atualizados em tempo real</p>
+      <div className="flex-shrink-0 mt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-1">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <span className="text-gray-700 dark:text-gray-300">Magnitudes normalizadas em pu (por unidade)</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-3 text-gray-500 dark:text-gray-400">
+            <span>Ângulos relativos à PMU de referência: <span className="text-blue-500 font-medium">{availablePMUs.find(p => p.pmuId === referencePMU)?.pmuName || referencePMU}</span></span>
+            <span>Dados atualizados em tempo real</span>
+          </div>
+        </div>
       </div>
     </div>
   );
