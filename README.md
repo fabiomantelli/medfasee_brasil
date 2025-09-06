@@ -1,36 +1,133 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Projeto Medfasee Brasil
 
-## Getting Started
+## Monitoramento do Sistema Elétrico Brasileiro em Tempo Real
 
-First, run the development server:
+Este projeto é uma modernização completa do sistema de monitoramento elétrico, desenvolvido com **Next.js 15**, **React 19** e **Tailwind CSS 4**.
 
+## 🚀 Funcionalidades
+
+### ✅ Implementadas
+- **Dashboard em Tempo Real**: Métricas de frequência atualizadas a cada 2 segundos
+- **Mapa Interativo do Brasil**: Visualização por regiões com cores indicativas de status
+- **Gráfico de Histórico**: Acompanhamento da frequência ao longo do tempo
+- **Sistema de Notificações**: Alertas automáticos para situações críticas
+- **Design Responsivo**: Interface moderna que funciona em desktop e mobile
+- **Modo Escuro**: Alternância entre temas claro e escuro
+- **Indicadores Visuais**: Status em tempo real do sistema elétrico
+
+### 📊 Métricas Monitoradas
+- Frequência geral do sistema (Hz)
+- Frequência por região (Norte, Nordeste, Sudeste, Sul, Centro-Oeste)
+- Status operacional
+- Histórico de variações
+- Alertas de criticidade
+
+## 🛠️ Tecnologias Utilizadas
+
+- **Next.js 15** com App Router
+- **React 19** com Hooks modernos
+- **TypeScript** para tipagem estática
+- **Tailwind CSS 4** para estilização
+- **SVG** para gráficos e mapas vetoriais
+
+## 🚀 Como Executar
+
+### Pré-requisitos
+- Node.js 18+ 
+- npm ou yarn
+
+### Instalação
 ```bash
+# Clone o repositório
+git clone <url-do-repositorio>
+
+# Entre no diretório
+cd medfasee_brasil
+
+# Instale as dependências
+npm install
+
+# Execute em modo de desenvolvimento
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+A aplicação estará disponível em `http://localhost:3000`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build para Produção
+```bash
+# Gerar build otimizado
+npm run build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Executar em produção
+npm start
+```
 
-## Learn More
+## 📱 Interface
 
-To learn more about Next.js, take a look at the following resources:
+### Componentes Principais
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Header**: Navegação e controles (modo escuro, status online)
+2. **Dashboard**: Métricas principais e indicadores por região
+3. **Mapa do Brasil**: Visualização interativa das regiões
+4. **Gráfico de Frequência**: Histórico em tempo real
+5. **Sistema de Notificações**: Alertas flutuantes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Indicadores de Status
+- 🟢 **Verde**: Frequência normal (59.95-60.05 Hz)
+- 🟡 **Amarelo**: Atenção (59.9-60.1 Hz)
+- 🔴 **Vermelho**: Crítico (<59.9 ou >60.1 Hz)
 
-## Deploy on Vercel
+## 🔧 Estrutura do Projeto
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+app/
+├── components/
+│   ├── Header.tsx              # Cabeçalho e navegação
+│   ├── Dashboard.tsx           # Painel de métricas
+│   ├── BrazilMap.tsx          # Mapa interativo
+│   ├── FrequencyChart.tsx     # Gráfico de histórico
+│   └── NotificationSystem.tsx # Sistema de alertas
+├── globals.css                # Estilos globais
+├── layout.tsx                 # Layout principal
+└── page.tsx                   # Página inicial
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🎯 Melhorias Implementadas
+
+Comparado ao site antigo (www.medfasee.ufsc.br/brasil):
+
+### ❌ Problemas do Site Antigo
+- Interface desatualizada e pouco intuitiva
+- Mapa estático sem interatividade
+- Dados apresentados de forma básica
+- Sem responsividade mobile
+- Ausência de histórico visual
+- Falta de sistema de alertas
+
+### ✅ Soluções Implementadas
+- **Interface Moderna**: Design limpo e profissional
+- **Mapa Interativo**: Clique nas regiões para ver detalhes
+- **Dados em Tempo Real**: Atualização automática a cada 2s
+- **Totalmente Responsivo**: Funciona perfeitamente em mobile
+- **Gráficos Dinâmicos**: Visualização do histórico de frequência
+- **Sistema de Alertas**: Notificações automáticas para situações críticas
+- **Modo Escuro**: Melhor experiência visual
+- **Performance**: Carregamento rápido com Next.js 15
+
+## 🔮 Próximas Funcionalidades
+
+- Integração com APIs reais de dados elétricos
+- Histórico persistente em banco de dados
+- Relatórios exportáveis (PDF/Excel)
+- Configurações personalizáveis de alertas
+- Autenticação e controle de acesso
+- Dashboard administrativo
+- Integração com sistemas de monitoramento externos
+
+## 📞 Suporte
+
+Projeto desenvolvido para a **Universidade Federal de Santa Catarina (UFSC)**
+
+---
+
+**Desenvolvido com ❤️ usando as mais modernas tecnologias web**

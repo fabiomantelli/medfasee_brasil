@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+@import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 
 :root {
   --background: #ffffff;
@@ -23,4 +25,142 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* React Grid Layout Styles */
+.react-grid-layout {
+  position: relative;
+}
+
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top;
+}
+
+.react-grid-item.cssTransforms {
+  transition-property: transform;
+}
+
+.react-grid-item > .react-resizable-handle {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  bottom: 0;
+  right: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjNEE1QTZBIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjIiIGN5PSIyIiByPSIxIi8+PGNpcmNsZSBjeD0iNiIgY3k9IjIiIHI9IjEiLz48Y2lyY2xlIGN4PSIxMCIgY3k9IjIiIHI9IjEiLz48Y2lyY2xlIGN4PSI2IiBjeT0iNiIgcj0iMSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iNiIgcj0iMSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjEiLz48L2c+PC9zdmc+') no-repeat;
+  background-position: center;
+  background-size: 12px 12px;
+  box-sizing: border-box;
+  cursor: se-resize;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+  border-radius: 0 0 8px 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.react-grid-item:hover > .react-resizable-handle {
+  opacity: 1;
+  background-color: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: scale(1.1);
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: rgb(59 130 246 / 0.3);
+  opacity: 0.2;
+  transition-duration: 100ms;
+  z-index: 2;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+  border-radius: 0.75rem;
+  border: 2px dashed rgb(59 130 246 / 0.5);
+}
+
+/* Dark mode adjustments */
+.dark .react-grid-item > .react-resizable-handle {
+  background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjOUNBNEFGIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjIiIGN5PSIyIiByPSIxIi8+PGNpcmNsZSBjeD0iNiIgY3k9IjIiIHI9IjEiLz48Y2lyY2xlIGN4PSIxMCIgY3k9IjIiIHI9IjEiLz48Y2lyY2xlIGN4PSI2IiBjeT0iNiIgcj0iMSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iNiIgcj0iMSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjEiLz48L2c+PC9zdmc+') no-repeat;
+  background-position: center;
+  background-size: 12px 12px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .react-grid-item:hover > .react-resizable-handle {
+  background-color: rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.dark .react-grid-item.react-grid-placeholder {
+  background: rgb(59 130 246 / 0.2);
+  border-color: rgb(59 130 246 / 0.4);
+}
+
+/* Dashboard container */
+.dashboard-container {
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+/* Smooth transitions for grid items */
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 3;
+  opacity: 0.9;
+}
+
+/* Drag handle configuration */
+.react-grid-item .drag-handle {
+  cursor: move !important;
+}
+
+.react-grid-item .no-drag {
+  cursor: default !important;
+}
+
+.react-grid-item.react-draggable-dragging .bg-white,
+.react-grid-item.react-draggable-dragging .dark\:bg-gray-800 {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  transform: rotate(2deg);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 0.5rem;
+  }
+  
+  .react-grid-layout {
+    margin: 0 -8px;
+  }
+}
+
+/* Custom scrollbar for panels */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 2px;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.5);
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8);
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 85, 99, 0.8);
 }
