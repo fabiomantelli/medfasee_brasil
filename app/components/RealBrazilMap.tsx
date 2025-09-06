@@ -158,7 +158,7 @@ const MapComponent = ({ data }: RealBrazilMapProps) => {
         <MapContainer
           center={[-14.2350, -51.9253]} // Centro do Brasil
           zoom={4}
-          style={{ height: '100%', width: '100%' }}
+          className="h-full w-full"
           scrollWheelZoom={true}
           attributionControl={false}
         >

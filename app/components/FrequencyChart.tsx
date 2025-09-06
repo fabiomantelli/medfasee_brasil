@@ -145,14 +145,14 @@ export default function FrequencyChart({ pmuMeasurements }: FrequencyChartProps)
                       ? 'text-white shadow-md' 
                       : 'text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 shadow-sm border border-gray-200 dark:border-gray-600'
                   }`}
-                  style={isSelected ? { backgroundColor: color } : {}}
+                  style={isSelected ? { backgroundColor: color } : undefined}
                 >
                   <div className="flex items-center space-x-1">
                     <div 
                       className={`w-1.5 h-1.5 rounded-full ${
                         isSelected ? 'bg-white/80' : 'bg-current opacity-50'
                       }`}
-                      style={!isSelected ? { backgroundColor: color } : {}}
+                      style={!isSelected ? { backgroundColor: color } : undefined}
                     ></div>
                     <span>{getPMUName(pmu.pmuId)}</span>
                   </div>
@@ -284,7 +284,7 @@ export default function FrequencyChart({ pmuMeasurements }: FrequencyChartProps)
                         cy={y}
                         r="15"
                         fill="transparent"
-                        style={{ cursor: 'pointer' }}
+                        className="cursor-pointer"
 
                       />
                       {/* Outer glow ring */}
@@ -323,9 +323,7 @@ export default function FrequencyChart({ pmuMeasurements }: FrequencyChartProps)
                         stroke="rgba(255, 255, 255, 0.9)"
                         strokeWidth={isLast ? "2" : "1"}
                         className={isLast ? "animate-pulse" : "hover:scale-125 transition-all duration-200"}
-                        style={{
-                          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
-                        }}
+                        className={`${isLast ? "animate-pulse" : "hover:scale-125 transition-all duration-200"} drop-shadow-md`}
                       />
                       {/* Inner core */}
                       <circle
@@ -492,7 +490,7 @@ export default function FrequencyChart({ pmuMeasurements }: FrequencyChartProps)
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-6">
               <div className="flex items-center space-x-2">
-                <div className="w-4 h-0.5 bg-emerald-500" style={{borderTop: '2px dashed #10b981'}}></div>
+                <div className="w-4 h-0.5 bg-emerald-500 border-t-2 border-dashed border-emerald-500"></div>
                 <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Referência (60Hz)</span>
               </div>
               <div className="flex items-center space-x-2">
@@ -500,7 +498,7 @@ export default function FrequencyChart({ pmuMeasurements }: FrequencyChartProps)
                 <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Valores Atuais</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-4 h-0.5 bg-amber-500 opacity-60" style={{borderTop: '1px dashed #f59e0b'}}></div>
+                <div className="w-4 h-0.5 bg-amber-500 opacity-60 border-t border-dashed border-amber-500"></div>
                 <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Limites (±0.1Hz)</span>
               </div>
             </div>

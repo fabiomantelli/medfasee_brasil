@@ -29,16 +29,16 @@ interface DashboardProps {
 export default function Dashboard({ systemData, pmuMeasurements, mapComponent, chartComponent }: DashboardProps) {
   const [layouts, setLayouts] = useState({
     lg: [
-      { i: 'status', x: 0, y: 0, w: 6, h: 4, minW: 4, minH: 3 },
+      { i: 'status', x: 0, y: 0, w: 6, h: 6, minW: 4, minH: 3 },
       { i: 'map', x: 6, y: 0, w: 6, h: 12, minW: 4, minH: 10 },
-      { i: 'alerts', x: 0, y: 4, w: 6, h: 4, minW: 4, minH: 3 },
-      { i: 'chart', x: 0, y: 8, w: 12, h: 18, minW: 8, minH: 12 }
+      { i: 'alerts', x: 0, y: 6, w: 6, h: 6, minW: 4, minH: 3 },
+      { i: 'chart', x: 0, y: 12, w: 6, h: 18, minW: 6, minH: 12 }
     ],
     md: [
-      { i: 'status', x: 0, y: 0, w: 6, h: 4, minW: 4, minH: 3 },
+      { i: 'status', x: 0, y: 0, w: 6, h: 6, minW: 4, minH: 3 },
       { i: 'map', x: 6, y: 0, w: 6, h: 12, minW: 4, minH: 10 },
-      { i: 'alerts', x: 0, y: 4, w: 6, h: 4, minW: 4, minH: 3 },
-      { i: 'chart', x: 0, y: 8, w: 12, h: 18, minW: 8, minH: 12 }
+      { i: 'alerts', x: 0, y: 6, w: 6, h: 6, minW: 4, minH: 3 },
+      { i: 'chart', x: 0, y: 12, w: 6, h: 18, minW: 6, minH: 12 }
     ],
     sm: [
       { i: 'status', x: 0, y: 0, w: 6, h: 4, minW: 4, minH: 3 },
@@ -119,15 +119,15 @@ export default function Dashboard({ systemData, pmuMeasurements, mapComponent, c
                 <div className="text-blue-600 dark:text-blue-400 font-semibold mb-1">Carga do Sistema</div>
                 <div className="text-lg font-bold text-blue-700 dark:text-blue-300 mb-1">85.2%</div>
                 <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
-                  <div className="bg-blue-500 h-2 rounded-full" style={{ width: '85.2%' }}></div>
-                </div>
+                    <div className="bg-blue-500 h-2 rounded-full w-[85.2%]"></div>
+                  </div>
               </div>
               <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg p-2 border border-orange-200 dark:border-orange-800">
                 <div className="text-orange-600 dark:text-orange-400 font-semibold mb-1">Qualidade de Energia</div>
                 <div className="text-lg font-bold text-orange-700 dark:text-orange-300 mb-1">98.7%</div>
                 <div className="w-full bg-orange-200 dark:bg-orange-800 rounded-full h-2">
-                  <div className="bg-orange-500 h-2 rounded-full" style={{ width: '98.7%' }}></div>
-                </div>
+                    <div className="bg-orange-500 h-2 rounded-full w-[98.7%]"></div>
+                  </div>
               </div>
             </div>
 
@@ -145,8 +145,8 @@ export default function Dashboard({ systemData, pmuMeasurements, mapComponent, c
                   <div className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">12ms</div>
                 </div>
                 <div className="w-full bg-emerald-200 dark:bg-emerald-800 rounded-full h-2 mt-1">
-                  <div className="bg-emerald-500 h-2 rounded-full" style={{ width: '94%' }}></div>
-                </div>
+                    <div className="bg-emerald-500 h-2 rounded-full w-[94%]"></div>
+                  </div>
               </div>
               <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-lg p-2 border border-indigo-200 dark:border-indigo-800">
                 <div className="text-indigo-600 dark:text-indigo-400 font-semibold mb-1">Sincronismo GPS</div>
@@ -198,7 +198,7 @@ export default function Dashboard({ systemData, pmuMeasurements, mapComponent, c
             </h3>
           </div>
           <div className="p-3 no-drag">
-            <div className="overflow-hidden" style={{ maxHeight: 'calc(100% - 2rem)' }}>
+            <div className="overflow-hidden max-h-[calc(100%-2rem)]">
               {chartComponent || (
                 <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
                   Gráfico não disponível
@@ -218,7 +218,7 @@ export default function Dashboard({ systemData, pmuMeasurements, mapComponent, c
           </div>
           
           <div className="p-2 flex flex-col h-full no-drag">
-            <div className="space-y-2 overflow-y-auto flex-1" style={{ minHeight: '300px' }}>
+            <div className="space-y-2 overflow-y-auto flex-1 min-h-[300px]">
               {/* Status Atual */}
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-2 border-l-4 border-green-500">
                 <div className="flex items-center justify-between mb-1">

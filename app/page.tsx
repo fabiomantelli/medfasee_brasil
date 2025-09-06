@@ -120,7 +120,7 @@ export default function Home() {
             </div>
             <div className="ml-3">
               <p className="text-sm">
-                Conectado aos dados reais das PMUs do sistema elétrico brasileiro
+                Conectado aos dados reais das PMUs das Universidades Brasileiras
               </p>
             </div>
           </div>

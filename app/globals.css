@@ -28,32 +28,26 @@ body {
 }
 
 /* React Grid Layout Styles */
+/* React Grid Layout - convertido para Tailwind */
 .react-grid-layout {
-  position: relative;
+  @apply relative;
 }
 
 .react-grid-item {
-  transition: all 200ms ease;
+  @apply transition-all duration-200 ease-in-out;
   transition-property: left, top;
 }
 
 .react-grid-item.cssTransforms {
-  transition-property: transform;
+  @apply transition-transform;
 }
 
 .react-grid-item > .react-resizable-handle {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  bottom: 0;
-  right: 0;
+  @apply absolute w-6 h-6 bottom-0 right-0 cursor-se-resize opacity-60 transition-all duration-200 ease-in-out;
   background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjNEE1QTZBIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjIiIGN5PSIyIiByPSIxIi8+PGNpcmNsZSBjeD0iNiIgY3k9IjIiIHI9IjEiLz48Y2lyY2xlIGN4PSIxMCIgY3k9IjIiIHI9IjEiLz48Y2lyY2xlIGN4PSI2IiBjeT0iNiIgcj0iMSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iNiIgcj0iMSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjEiLz48L2c+PC9zdmc+') no-repeat;
   background-position: center;
   background-size: 12px 12px;
   box-sizing: border-box;
-  cursor: se-resize;
-  opacity: 0.6;
-  transition: all 0.2s ease;
   border-radius: 0 0 8px 0;
   background-color: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(4px);
@@ -68,16 +62,8 @@ body {
 }
 
 .react-grid-item.react-grid-placeholder {
-  background: rgb(59 130 246 / 0.3);
-  opacity: 0.2;
+  @apply bg-blue-500/30 opacity-20 z-20 select-none rounded-xl;
   transition-duration: 100ms;
-  z-index: 2;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -o-user-select: none;
-  user-select: none;
-  border-radius: 0.75rem;
   border: 2px dashed rgb(59 130 246 / 0.5);
 }
 
@@ -102,15 +88,18 @@ body {
 
 /* Dashboard container */
 .dashboard-container {
-  min-height: 100vh;
-  padding: 1rem;
+  @apply min-h-screen p-4 bg-gradient-to-br from-slate-50 to-slate-200;
+}
+
+@media (prefers-color-scheme: dark) {
+  .dashboard-container {
+    @apply bg-gradient-to-br from-slate-900 to-slate-800;
+  }
 }
 
 /* Smooth transitions for grid items */
 .react-grid-item.react-draggable-dragging {
-  transition: none;
-  z-index: 3;
-  opacity: 0.9;
+  @apply transition-none z-30 opacity-90;
 }
 
 /* Drag handle configuration */
@@ -128,39 +117,67 @@ body {
   transform: rotate(2deg);
 }
 
-/* Responsive adjustments */
+/* Additional grid item states */
+.react-grid-item.dropping {
+  @apply invisible;
+}
+
+/* Responsive adjustments - convertido para Tailwind */
 @media (max-width: 768px) {
   .dashboard-container {
-    padding: 0.5rem;
+    @apply p-2;
   }
   
   .react-grid-layout {
-    margin: 0 -8px;
+    @apply -mx-2;
   }
 }
 
-/* Custom scrollbar for panels */
-.overflow-y-auto::-webkit-scrollbar {
-  width: 4px;
+/* Breakpoints adicionais para melhor responsividade */
+@media (max-width: 640px) {
+  .react-grid-item {
+    @apply min-h-[200px];
+  }
+  
+  .react-grid-item > .react-resizable-handle {
+    @apply w-8 h-8;
+  }
 }
 
-.overflow-y-auto::-webkit-scrollbar-track {
-  background: transparent;
+@media (max-width: 480px) {
+  .dashboard-container {
+    @apply p-1;
+  }
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.5);
-  border-radius: 2px;
+/* Custom scrollbar - usando Tailwind utilities */
+::-webkit-scrollbar {
+  @apply w-2 h-2;
 }
 
-.dark .overflow-y-auto::-webkit-scrollbar-thumb {
-  background: rgba(75, 85, 99, 0.5);
+::-webkit-scrollbar-track {
+  @apply bg-slate-100 rounded;
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.8);
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded transition-colors duration-200;
 }
 
-.dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: rgba(75, 85, 99, 0.8);
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400;
+}
+
+/* Dark mode scrollbar */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-800;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-600;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-500;
+  }
 }
