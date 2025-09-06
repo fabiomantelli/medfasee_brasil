@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import AngularDifferenceChart from './AngularDifferenceChart';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -32,25 +33,29 @@ export default function Dashboard({ systemData, pmuMeasurements, mapComponent, c
       { i: 'status', x: 0, y: 0, w: 6, h: 6, minW: 4, minH: 3 },
       { i: 'map', x: 6, y: 0, w: 6, h: 12, minW: 4, minH: 10 },
       { i: 'alerts', x: 0, y: 6, w: 6, h: 6, minW: 4, minH: 3 },
-      { i: 'chart', x: 0, y: 12, w: 6, h: 12, minW: 6, minH: 10 }
+      { i: 'chart', x: 0, y: 12, w: 6, h: 12, minW: 6, minH: 10 },
+      { i: 'angular', x: 6, y: 12, w: 6, h: 12, minW: 6, minH: 10 }
     ],
     md: [
       { i: 'status', x: 0, y: 0, w: 6, h: 6, minW: 4, minH: 3 },
       { i: 'map', x: 6, y: 0, w: 6, h: 12, minW: 4, minH: 10 },
       { i: 'alerts', x: 0, y: 6, w: 6, h: 6, minW: 4, minH: 3 },
-      { i: 'chart', x: 0, y: 12, w: 6, h: 12, minW: 6, minH: 10 }
+      { i: 'chart', x: 0, y: 12, w: 6, h: 12, minW: 6, minH: 10 },
+      { i: 'angular', x: 6, y: 12, w: 6, h: 12, minW: 6, minH: 10 }
     ],
     sm: [
       { i: 'status', x: 0, y: 0, w: 6, h: 4, minW: 4, minH: 3 },
       { i: 'map', x: 0, y: 4, w: 6, h: 12, minW: 4, minH: 10 },
       { i: 'alerts', x: 0, y: 16, w: 6, h: 4, minW: 4, minH: 3 },
-      { i: 'chart', x: 0, y: 20, w: 6, h: 12, minW: 6, minH: 10 }
+      { i: 'chart', x: 0, y: 20, w: 6, h: 12, minW: 6, minH: 10 },
+      { i: 'angular', x: 0, y: 32, w: 6, h: 12, minW: 6, minH: 10 }
     ],
     xs: [
       { i: 'status', x: 0, y: 0, w: 4, h: 4, minW: 4, minH: 3 },
       { i: 'map', x: 0, y: 4, w: 4, h: 12, minW: 4, minH: 10 },
       { i: 'alerts', x: 0, y: 16, w: 4, h: 4, minW: 4, minH: 3 },
-      { i: 'chart', x: 0, y: 20, w: 4, h: 12, minW: 4, minH: 10 }
+      { i: 'chart', x: 0, y: 20, w: 4, h: 12, minW: 4, minH: 10 },
+      { i: 'angular', x: 0, y: 32, w: 4, h: 12, minW: 4, minH: 10 }
     ]
   });
 
@@ -212,6 +217,21 @@ export default function Dashboard({ systemData, pmuMeasurements, mapComponent, c
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+
+        {/* Diferença Angular */}
+        <div key="angular" className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow flex flex-col">
+          <div className="bg-gradient-to-r from-green-500 to-teal-600 px-4 py-3 drag-handle cursor-move flex-shrink-0">
+            <h3 className="text-lg font-semibold text-white flex items-center">
+              <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
+              Diferença Angular
+            </h3>
+          </div>
+          <div className="flex-1 p-4 no-drag flex flex-col min-h-0">
+             <div className="flex-1 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-700 shadow-inner border border-gray-200 dark:border-gray-600 min-h-0">
+              <AngularDifferenceChart pmuMeasurements={pmuMeasurements || []} />
             </div>
           </div>
         </div>

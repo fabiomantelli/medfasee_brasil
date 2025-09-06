@@ -11,8 +11,14 @@ export interface TimeSeriesResponse {
   TimeSeriesDataPoints: TimeSeriesDataPoint[];
 }
 
+export interface VoltageData {
+  magnitude: number;
+  angle: number;
+}
+
 export interface PMUMeasurement {
   pmuId: string;
+  pmuName: string;
   frequency: number;
   dfreq: number;
   timestamp: string;
@@ -22,6 +28,10 @@ export interface PMUMeasurement {
   station: string;
   state: string;
   area: string;
+  voltLevel: number;
+  voltageA?: VoltageData;
+  voltageB?: VoltageData;
+  voltageC?: VoltageData;
 }
 
 export class PMUService {
@@ -71,11 +81,18 @@ export class PMUService {
 
   // Get all PMU measurements with current data
   async getAllPMUMeasurements(): Promise<PMUMeasurement[]> {
-    // Get all frequency and dfreq IDs
+    // Get all IDs (frequency, dfreq, and voltage)
     const allIds: number[] = [];
     this.pmus.forEach(pmu => {
       if (pmu.frequencyId > 0) allIds.push(pmu.frequencyId);
       if (pmu.dfreqId > 0) allIds.push(pmu.dfreqId);
+      // Add voltage IDs for all phases
+      if (pmu.voltageIds.A.modId > 0) allIds.push(pmu.voltageIds.A.modId);
+      if (pmu.voltageIds.A.angId > 0) allIds.push(pmu.voltageIds.A.angId);
+      if (pmu.voltageIds.B.modId > 0) allIds.push(pmu.voltageIds.B.modId);
+      if (pmu.voltageIds.B.angId > 0) allIds.push(pmu.voltageIds.B.angId);
+      if (pmu.voltageIds.C.modId > 0) allIds.push(pmu.voltageIds.C.modId);
+      if (pmu.voltageIds.C.angId > 0) allIds.push(pmu.voltageIds.C.angId);
     });
 
     // Fetch current data
@@ -88,19 +105,53 @@ export class PMUService {
       const freqData = dataPoints.find(dp => dp.HistorianID === pmu.frequencyId);
       const dfreqData = dataPoints.find(dp => dp.HistorianID === pmu.dfreqId);
       
-      if (freqData || dfreqData) {
-        measurements.push({
+      // Get voltage data for all phases
+      const voltageAMag = dataPoints.find(dp => dp.HistorianID === pmu.voltageIds.A.modId);
+      const voltageAAng = dataPoints.find(dp => dp.HistorianID === pmu.voltageIds.A.angId);
+      const voltageBMag = dataPoints.find(dp => dp.HistorianID === pmu.voltageIds.B.modId);
+      const voltageBAng = dataPoints.find(dp => dp.HistorianID === pmu.voltageIds.B.angId);
+      const voltageCMag = dataPoints.find(dp => dp.HistorianID === pmu.voltageIds.C.modId);
+      const voltageCAng = dataPoints.find(dp => dp.HistorianID === pmu.voltageIds.C.angId);
+      
+      if (freqData || dfreqData || voltageAMag || voltageAAng) {
+        const measurement: PMUMeasurement = {
           pmuId: pmu.id,
+          pmuName: pmu.fullName,
           frequency: freqData?.Value || 60.0,
           dfreq: dfreqData?.Value || 0.0,
-          timestamp: freqData?.Time || dfreqData?.Time || new Date().toISOString(),
-          quality: freqData?.Quality || dfreqData?.Quality || 0,
+          timestamp: freqData?.Time || dfreqData?.Time || voltageAMag?.Time || new Date().toISOString(),
+          quality: freqData?.Quality || dfreqData?.Quality || voltageAMag?.Quality || 0,
           lat: pmu.lat,
           lon: pmu.lon,
           station: pmu.station,
           state: pmu.state,
-          area: pmu.area
-        });
+          area: pmu.area,
+          voltLevel: pmu.voltLevel
+        };
+        
+        // Add voltage data if available
+        if (voltageAMag && voltageAAng) {
+          measurement.voltageA = {
+            magnitude: voltageAMag.Value,
+            angle: voltageAAng.Value
+          };
+        }
+        
+        if (voltageBMag && voltageBAng) {
+          measurement.voltageB = {
+            magnitude: voltageBMag.Value,
+            angle: voltageBAng.Value
+          };
+        }
+        
+        if (voltageCMag && voltageCAng) {
+          measurement.voltageC = {
+            magnitude: voltageCMag.Value,
+            angle: voltageCAng.Value
+          };
+        }
+        
+        measurements.push(measurement);
       }
     });
 
