@@ -26,12 +26,7 @@ interface MemoizedDashboardProps {
  * Dashboard moderno 2025 conectado ao store centralizado
  * Sem React.memo - dados mudam constantemente a cada 5 segundos
  */
-const MemoizedDashboard = ({ 
-  systemData,
-  mapComponent,
-  chartComponent,
-  angularComponent
-}: MemoizedDashboardProps) => {
+const MemoizedDashboard = ({}: MemoizedDashboardProps) => {
   // Use Zustand store directly
   const { stats, pmuMeasurements, isRealDataConnected, pmuService } = useDashboardStore();
   
@@ -42,21 +37,9 @@ const MemoizedDashboard = ({
   const activePMUs = pmuMeasurements?.length || 0;
   
   // Calcular métricas em tempo real do store centralizado com memoização
-  const systemHealth = stats.averageFrequency > 0 ? 'healthy' : 'disconnected';
+  // const systemHealth = stats.averageFrequency > 0 ? 'healthy' : 'disconnected';
   
-  const healthColor = React.useMemo(() => ({
-    healthy: 'green',
-    warning: 'yellow', 
-    critical: 'red',
-    disconnected: 'gray'
-  }[systemHealth]), [systemHealth]);
-  
-  const healthLabel = React.useMemo(() => ({
-    healthy: 'NORMAL',
-    warning: 'ATENÇÃO',
-    critical: 'CRÍTICO', 
-    disconnected: 'DESCONECTADO'
-  }[systemHealth]), [systemHealth]);
+
   
   console.log('🔍 MemoizedDashboard - Modern 2025 Dashboard rendered');
   console.log('🔍 MemoizedDashboard - Stats from centralized store:', stats);

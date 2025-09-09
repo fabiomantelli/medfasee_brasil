@@ -9,18 +9,6 @@ interface PMUDataPoint {
   pmuId: string;
 }
 
-interface SystemData {
-  frequency: number;
-  timestamp: string;
-  status: 'normal' | 'warning' | 'critical' | 'disconnected';
-  regions: {
-    [key: string]: {
-      frequency: number;
-      status: 'normal' | 'warning' | 'critical' | 'disconnected';
-    };
-  };
-}
-
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface MemoizedFrequencyChartProps {}
 

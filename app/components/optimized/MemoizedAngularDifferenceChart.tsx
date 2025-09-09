@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useLayoutEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useLayoutEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { PMUMeasurement, VoltageData } from '../../services/pmuService';
+import { PMUMeasurement } from '../../services/pmuService';
 import { usePMUData } from '../../hooks/useDashboard';
 
 // Importação dinâmica do Plotly para evitar problemas de SSR
-const Plot = dynamic(() => import('react-plotly.js'), { ssr: false }) as any;
+const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 
 interface PolarData {
   r: number; // magnitude in pu
@@ -31,11 +31,19 @@ interface MemoizedAngularDifferenceChartProps {
   };
 }
 
+// Cores para PMUs (movido para fora do componente para evitar recriação)
+const PMU_COLORS = [
+  '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
+  '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#6366f1',
+  '#14b8a6', '#f43f5e', '#22c55e', '#a855f7', '#0ea5e9',
+  '#eab308', '#dc2626', '#059669', '#7c3aed', '#0891b2'
+];
+
 /**
  * Componente de diferença angular otimizado para 2025
  * Sem React.memo para melhor performance com dados que mudam constantemente
  */
-const AngularDifferenceChartComponent = ({ systemData }: MemoizedAngularDifferenceChartProps) => {
+const AngularDifferenceChartComponent = ({}: MemoizedAngularDifferenceChartProps) => {
   // Hooks otimizados com seletores específicos
   const { measurements, isRealDataConnected } = usePMUData();
   
@@ -55,7 +63,7 @@ const AngularDifferenceChartComponent = ({ systemData }: MemoizedAngularDifferen
       const initialPMUs = availablePMUs.slice(0, 5).map(pmu => pmu.pmuId);
       setSelectedPMUs(new Set(initialPMUs));
     }
-  }, [availablePMUs]);
+  }, [availablePMUs, selectedPMUs.size]);
 
   // Detectar mudanças no tamanho do container para redimensionar o gráfico
   useLayoutEffect(() => {
@@ -124,7 +132,7 @@ const AngularDifferenceChartComponent = ({ systemData }: MemoizedAngularDifferen
       );
       return filteredSelection;
     });
-  }, [measurements]);
+  }, [measurements, referencePMU]);
 
   // Calcular ângulos relativos quando dados polares ou PMU de referência mudarem
   useEffect(() => {
@@ -173,19 +181,13 @@ const AngularDifferenceChartComponent = ({ systemData }: MemoizedAngularDifferen
     });
   };
 
-  // Cores para PMUs
-  const PMU_COLORS = [
-    '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
-    '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#6366f1',
-    '#14b8a6', '#f43f5e', '#22c55e', '#a855f7', '#0ea5e9',
-    '#eab308', '#dc2626', '#059669', '#7c3aed', '#0891b2'
-  ];
+
 
   // Função para obter cor da PMU
-  const getPMUColor = (pmuId: string): string => {
+  const getPMUColor = useCallback((pmuId: string): string => {
     const index = availablePMUs.findIndex(pmu => pmu.pmuId === pmuId);
     return PMU_COLORS[index % PMU_COLORS.length];
-  };
+  }, [availablePMUs]);
 
   // Dados do gráfico polar otimizados com useMemo
   const plotData = useMemo(() => {
@@ -235,7 +237,7 @@ const AngularDifferenceChartComponent = ({ systemData }: MemoizedAngularDifferen
     
     console.log('🔍 Angular Chart - Generated traces:', traces.length);
     return traces;
-  }, [polarData, selectedPMUs, relativeAngles, availablePMUs]);
+  }, [polarData, selectedPMUs, relativeAngles, getPMUColor]);
 
   const layout = {
     polar: {
@@ -416,7 +418,7 @@ const AngularDifferenceChartComponent = ({ systemData }: MemoizedAngularDifferen
             Selecionar PMUs para Visualização
           </h4>
           <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto scrollbar-thin">
-            {(availablePMUs || []).map((pmu, index) => {
+            {(availablePMUs || []).map((pmu) => {
               const isSelected = selectedPMUs.has(pmu.pmuId);
               const color = getPMUColor(pmu.pmuId);
               
