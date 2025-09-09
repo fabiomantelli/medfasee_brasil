@@ -1,26 +1,35 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
-import { PMUService, PMUMeasurement } from '../services/pmuService';
-import { loadPMUData, PMUData } from '../utils/xmlParser';
+import { useDashboardStore } from '../stores/dashboardStore';
 
-// Interfaces para os dados do sistema
-interface SystemData {
+// Interface otimizada - componente recebe apenas dados de frequência
+interface MapFrequencyData {
+  pmuId: string;
+  pmuName: string;
   frequency: number;
+  dfreq: number;
   timestamp: string;
-  status: 'normal' | 'warning' | 'critical';
-  regions: {
-    north: { frequency: number; status: 'normal' | 'warning' | 'critical' };
-    northeast: { frequency: number; status: 'normal' | 'warning' | 'critical' };
-    southeast: { frequency: number; status: 'normal' | 'warning' | 'critical' };
-    south: { frequency: number; status: 'normal' | 'warning' | 'critical' };
-    centerwest: { frequency: number; status: 'normal' | 'warning' | 'critical' };
-  };
+  quality: number;
+  lat: number;
+  lon: number;
+  station: string;
+  state: string;
+  area: string;
+  voltLevel: number;
+  status: string;
+  // Propriedades derivadas para compatibilidade
+  name?: string;
+  region?: string;
+  latitude?: number;
+  longitude?: number;
+  rocof?: number;
 }
 
-interface RealBrazilMapProps {
-  data: SystemData;
+interface OptimizedMapProps {
+  // Props mínimas necessárias - React.memo funcionará melhor
+  className?: string;
 }
 
 // Coordenadas das capitais das regiões do Brasil
@@ -44,197 +53,386 @@ const getStatusText = (frequency: number): string => {
   return 'Crítico';
 };
 
-
-
-const MapComponent = ({ data }: RealBrazilMapProps) => {
-  const [pmuMeasurements, setPmuMeasurements] = useState<PMUMeasurement[]>([]);
-  const [pmuService, setPmuService] = useState<PMUService | null>(null);
-  const [loading, setLoading] = useState(true);
-
+/**
+ * Componente de mapa otimizado para 2025
+ * Sem React.memo - dados mudam constantemente a cada 5 segundos
+ */
+const MapComponent = ({ className }: OptimizedMapProps) => {
+  // Seletores otimizados - apenas re-renderiza quando dados específicos mudam
+  const pmuMeasurements = useDashboardStore(state => state.pmuMeasurements);
+  const isConnected = useDashboardStore(state => state.isRealDataConnected);
+  const pmuService = useDashboardStore(state => state.pmuService);
+  const setPmuMeasurements = useDashboardStore(state => state.setPmuMeasurements);
+  
+  // OTIMIZAÇÃO: Carregar dados em cache imediatamente quando o mapa inicializa
+  React.useEffect(() => {
+    if (pmuService && pmuMeasurements.length === 0) {
+      console.log('🗺️ Mapa - Carregando dados em cache do PMU Service...');
+      const cachedData = pmuService.getLastMeasurements();
+      if (cachedData.length > 0) {
+        console.log(`🗺️ Mapa - ${cachedData.length} PMUs carregadas do cache!`);
+        setPmuMeasurements(cachedData);
+      } else {
+        console.log('🗺️ Mapa - Nenhum dado em cache, aguardando primeira requisição...');
+      }
+    }
+  }, [pmuService, pmuMeasurements.length, setPmuMeasurements]);
+  
+  // Memoização dos dados de frequência para evitar recálculos
+  // OTIMIZAÇÃO: Mostrar PMUs imediatamente, mesmo com dados parciais
+  const frequencyData = React.useMemo(() => 
+    pmuMeasurements.map(pmu => ({
+      ...pmu,
+      name: pmu.pmuName,
+      region: pmu.area,
+      latitude: pmu.lat,
+      longitude: pmu.lon,
+      rocof: pmu.dfreq,
+      // Fallback para PMUs com dados parciais
+      frequency: pmu.frequency || 60.0, // Frequência padrão se não disponível
+      displayStatus: pmu.status === 'partial' ? 'Carregando...' : pmu.status
+    })),
+    [pmuMeasurements]
+  );
+  
   // Importações do Leaflet dentro do componente para evitar problemas de SSR
-  const { MapContainer, TileLayer, Marker, Popup } = require('react-leaflet');
+  const { MapContainer, TileLayer, Marker, Popup, CircleMarker } = require('react-leaflet');
   const L = require('leaflet');
   require('leaflet-defaulticon-compatibility');
 
-  const [selectedPMU, setSelectedPMU] = useState<PMUMeasurement | null>(null);
-
-  // Inicializar serviço PMU
-  useEffect(() => {
-    const initializePMUService = async () => {
-      try {
-        const { pmus, config } = await loadPMUData();
-        const service = new PMUService(config, pmus);
-        setPmuService(service);
-        
-        // Carregar dados iniciais
-        const measurements = await service.getAllPMUMeasurements();
-        setPmuMeasurements(measurements);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error initializing PMU service:', error);
-        setLoading(false);
-      }
-    };
-
-    initializePMUService();
-  }, []);
-
-  // Atualizar dados periodicamente
-  useEffect(() => {
-    if (!pmuService) return;
-
-    const interval = setInterval(async () => {
-      try {
-        const measurements = await pmuService.getAllPMUMeasurements();
-        setPmuMeasurements(measurements);
-      } catch (error) {
-        console.error('Error updating PMU data:', error);
-      }
-    }, 5000); // Atualizar a cada 5 segundos
-
-    return () => clearInterval(interval);
-  }, [pmuService]);
+  // Estado local mínimo - apenas PMU selecionada
+  const [selectedPMU, setSelectedPMU] = useState<MapFrequencyData | null>(null);
 
   // Atualizar PMU selecionada quando os dados são atualizados
-  useEffect(() => {
-    if (selectedPMU && pmuMeasurements.length > 0) {
-      const updatedPMU = pmuMeasurements.find(pmu => pmu.pmuId === selectedPMU.pmuId);
+  React.useEffect(() => {
+    if (selectedPMU && frequencyData?.length > 0) {
+      const updatedPMU = frequencyData.find(pmu => pmu.pmuId === selectedPMU.pmuId);
       if (updatedPMU) {
         setSelectedPMU(updatedPMU);
       }
     }
-  }, [pmuMeasurements, selectedPMU?.pmuId]);
+  }, [frequencyData, selectedPMU?.pmuId]);
 
-  // Função para criar ícones customizados baseados no status da frequência
+  // Função para criar ícones customizados modernos para 2025
   const createCustomIcon = (frequency: number) => {
     let color = '#10B981'; // Verde (normal)
+    let glowColor = '#10b981';
     if (Math.abs(frequency - 60) > 0.5) {
       color = '#EF4444'; // Vermelho (crítico)
+      glowColor = '#ef4444';
     } else if (Math.abs(frequency - 60) > 0.2) {
       color = '#F59E0B'; // Amarelo (aviso)
+      glowColor = '#f59e0b';
     }
     
     return L.divIcon({
       className: 'custom-marker',
       html: `
         <div style="
-          background-color: ${color};
+          background: linear-gradient(135deg, ${color} 0%, ${color}dd 100%);
           width: 20px;
           height: 20px;
           border-radius: 50%;
-          border: 3px solid white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          border: 2px solid white;
+          box-shadow: 0 0 0 3px ${glowColor}22, 0 4px 12px rgba(0,0,0,0.15);
           display: flex;
           align-items: center;
           justify-content: center;
+          transition: all 0.3s ease;
+          cursor: pointer;
         ">
           <div style="
             width: 8px;
             height: 8px;
             background-color: white;
             border-radius: 50%;
+            box-shadow: 0 0 2px rgba(0,0,0,0.2);
           "></div>
         </div>
+        <style>
+          .custom-marker:hover div {
+            transform: scale(1.2);
+            box-shadow: 0 0 0 4px ${glowColor}33, 0 6px 16px rgba(0,0,0,0.2);
+          }
+        </style>
       `,
       iconSize: [26, 26],
       iconAnchor: [13, 13]
     });
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando dados das PMUs...</p>
+  // Função para criar ícones inativos modernos (PMUs sem dados)
+  const createInactiveIcon = () => {
+    return L.divIcon({
+      className: 'custom-marker-inactive',
+      html: `
+        <div style="
+          background: linear-gradient(135deg, #EF4444 0%, #dc2626 100%);
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 0 0 3px #ef444422, 0 4px 12px rgba(0,0,0,0.15);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s ease;
+          cursor: pointer;
+          opacity: 0.8;
+        ">
+          <div style="
+            width: 6px;
+            height: 6px;
+            background-color: white;
+            border-radius: 50%;
+            box-shadow: 0 0 2px rgba(0,0,0,0.2);
+          "></div>
         </div>
-      </div>
-    );
+        <style>
+          .custom-marker-inactive:hover div {
+            transform: scale(1.1);
+            opacity: 1;
+            box-shadow: 0 0 0 4px #ef444433, 0 6px 16px rgba(0,0,0,0.2);
+          }
+        </style>
+      `,
+      iconSize: [26, 26],
+      iconAnchor: [13, 13]
+    });
+  };
+
+  // DADOS OTIMIZADOS - Mostrar PMUs com qualquer dado válido mais rapidamente
+  const realMeasurements = (frequencyData || []).filter(pmu => {
+    const hasValidFreq = pmu.frequency > 0;
+    const hasValidTimestamp = pmu.timestamp && pmu.timestamp !== '2024-01-01T00:00:00.000Z';
+    const isConnected = pmu.status === 'connected' || pmu.status === 'active' || pmu.status === 'partial';
+    
+    // PMU aparece no mapa se tem dados válidos E timestamp válido E está conectada
+    return (hasValidFreq || pmu.status === 'partial') && hasValidTimestamp && isConnected;
+  });
+  
+  // Obter TODAS as PMUs do XML para mostrar círculos vermelhos das inativas APENAS quando há dados
+  const allPMUsFromXML = pmuService?.getAllPMUs() || [];
+  
+  console.log('🗺️ RealBrazilMap - REAL DATA ONLY - No simulation allowed');
+  console.log('🗺️ RealBrazilMap - Valid real measurements:', realMeasurements.length);
+  console.log('🗺️ RealBrazilMap - Total frequency data received:', frequencyData?.length || 0);
+  console.log('🗺️ RealBrazilMap - Total PMUs from XML:', allPMUsFromXML.length);
+  console.log('🗺️ RealBrazilMap - Connection status:', isConnected);
+  
+  if (realMeasurements.length > 0) {
+    console.log('🗺️ RealBrazilMap - Sample real measurement:', realMeasurements[0]);
+  } else {
+    console.log('🗺️ RealBrazilMap - ❌ NO REAL DATA AVAILABLE - Webservice disconnected');
+  }
+  
+  // Só mostrar PMUs inativas (vermelhas) se já temos dados do webservice
+  // Isso evita mostrar círculos vermelhos no carregamento inicial
+  const hasWebserviceData = frequencyData.length > 0 && isConnected;
+  
+  // Identificar PMUs ativas e inativas APENAS se há dados do webservice
+  const activePMUIds = new Set(realMeasurements.map(pmu => pmu.pmuId));
+  
+  // Criar lista de PMUs inativas baseada no XML completo APENAS se há dados
+  const inactivePMUs = hasWebserviceData ? allPMUsFromXML
+    .filter(pmu => !activePMUIds.has(pmu.id)) // PMUs que não têm dados válidos
+    .map(pmu => ({
+      pmuId: pmu.id,
+      pmuName: pmu.fullName,
+      frequency: 0,
+      dfreq: 0,
+      timestamp: '',
+      quality: 0,
+      lat: pmu.lat,
+      lon: pmu.lon,
+      latitude: pmu.lat,
+      longitude: pmu.lon,
+      station: pmu.station,
+      state: pmu.state,
+      area: pmu.area,
+      voltLevel: pmu.voltLevel,
+      status: 'disconnected'
+    })) : [];
+  
+  console.log('🗺️ RealBrazilMap - Has webservice data:', hasWebserviceData);
+  console.log('🗺️ RealBrazilMap - Active PMUs (real data):', activePMUIds.size, 'Inactive PMUs (red circles):', inactivePMUs.length);
+  if (inactivePMUs.length > 0) {
+    console.log('🗺️ RealBrazilMap - Inactive PMUs:', inactivePMUs.map(pmu => `${pmu.pmuName} (${pmu.area})`));
+    console.log('🔥 MANAUS CHECK - Looking for Manaus in inactive PMUs:', inactivePMUs.filter(pmu => pmu.pmuName.toLowerCase().includes('manaus')));
   }
 
-  return (
-    <div className="h-full w-full">
-      <div className="h-full w-full rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+  // Mostrar mapa sempre, mesmo sem dados do webservice
+  // O mapa aparece vazio no início e as PMUs aparecem conforme os dados chegam
+  const shouldShowMap = allPMUsFromXML.length > 0; // Só precisa do XML carregado
+  
+  // Função para renderizar o conteúdo do mapa baseado no estado
+  const renderMapContent = () => {
+    // Estado de carregamento - diferencia webservice desconectado vs aguardando PMUs
+    if (!isConnected) {
+      return (
+        <div className="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-1 border border-slate-300 shadow-inner overflow-hidden flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-gray-600 mb-2">
+              <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <p className="text-gray-600 text-sm mb-1">🔌 Webservice indisponível</p>
+            <p className="text-gray-500 text-xs">
+              Aguardando conexão com o servidor de dados...
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // Estado aguardando configuração das PMUs (webservice conectado)
+    if (!shouldShowMap) {
+      const pmuCount = pmuMeasurements?.length || 0;
+      return (
+        <div className="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-1 border border-slate-300 shadow-inner overflow-hidden flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-gray-600 mb-2">
+              <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <p className="text-gray-600 text-sm mb-1">
+              {pmuCount === 0 ? '⏳ Aguardando PMUs...' : '🗺️ Carregando mapa do sistema...'}
+            </p>
+            <p className="text-gray-500 text-xs">
+              {pmuCount === 0 ? 'Nenhuma PMU conectada ainda' : `${pmuCount} PMU${pmuCount > 1 ? 's' : ''} detectada${pmuCount > 1 ? 's' : ''}, carregando configuração...`}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // Renderizar o mapa quando tudo estiver pronto
+    return (
+      <div className="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-1 border border-slate-300 shadow-inner overflow-hidden">
         <MapContainer
-          center={[-14.2350, -51.9253]} // Centro do Brasil
+          center={[-14.2350, -51.9253]}
           zoom={4}
-          className="h-full w-full"
-          scrollWheelZoom={true}
-          attributionControl={false}
+          style={{ height: '100%', width: '100%', borderRadius: '0.75rem' }}
+          className="leaflet-container"
         >
           <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
           
-          {/* Marcadores para cada PMU */}
-          {pmuMeasurements.map((pmu) => {
-            return (
-              <Marker
-                key={pmu.pmuId}
-                position={[pmu.lat, pmu.lon]}
-                icon={createCustomIcon(pmu.frequency)}
-                eventHandlers={{
-                  click: () => setSelectedPMU(pmu)
-                }}
-              >
-                <Popup>
-                  <div className="p-2 min-w-[200px]">
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      {pmu.station}
-                    </h4>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span>Estado:</span>
-                        <span className="font-mono">{pmu.state}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Região:</span>
-                        <span className="font-mono">{pmu.area}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Frequência:</span>
-                        <span className="font-mono">{pmu.frequency.toFixed(3)} Hz</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>ROCOF:</span>
-                        <span className="font-mono">{pmu.dfreq.toFixed(6)} Hz/s</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Desvio:</span>
-                        <span 
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            Math.abs(pmu.frequency - 60) <= 0.2 ? 'bg-green-100 text-green-800' :
-                            Math.abs(pmu.frequency - 60) <= 0.5 ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {(pmu.frequency - 60 > 0 ? '+' : '')}{(pmu.frequency - 60).toFixed(3)} Hz
-                        </span>
-                      </div>
-                      <div className="text-xs text-gray-500 mt-2">
-                        <strong>Atualizado:</strong> {new Date(pmu.timestamp).toLocaleTimeString('pt-BR')}
-                      </div>
-                    </div>
+          {/* PMUs ativas com dados reais */}
+          {realMeasurements.map((pmu) => (
+            <Marker
+              key={pmu.pmuId}
+              position={[pmu.latitude || pmu.lat, pmu.longitude || pmu.lon]}
+              icon={createCustomIcon(pmu.frequency)}
+              eventHandlers={{
+                click: () => setSelectedPMU(pmu)
+              }}
+            >
+              <Popup>
+                <div className="p-2 min-w-[200px]">
+                  <h4 className="font-bold text-gray-800 mb-2">{pmu.pmuName}</h4>
+                  <div className="space-y-1 text-sm">
+                    <p><span className="font-medium">Frequência:</span> <span className={`font-bold ${
+                      Math.abs(pmu.frequency - 60) <= 0.1 ? 'text-green-600' :
+                      Math.abs(pmu.frequency - 60) <= 0.5 ? 'text-yellow-600' : 'text-red-600'
+                    }`}>{pmu.frequency.toFixed(3)} Hz</span></p>
+                    <p><span className="font-medium">ROCOF:</span> {pmu.rocof?.toFixed(3) || 'N/A'} Hz/s</p>
+                    <p><span className="font-medium">Status:</span> <span className="text-green-600 font-medium">{getStatusText(pmu.frequency)}</span></p>
+                    <p><span className="font-medium">Região:</span> {pmu.region || pmu.area}</p>
+                    <p><span className="font-medium">Estado:</span> {pmu.state}</p>
+                    <p className="text-xs text-gray-500 mt-2">Última atualização: {new Date(pmu.timestamp).toLocaleTimeString('pt-BR')}</p>
                   </div>
-                </Popup>
-              </Marker>
-            );
-          })}
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+          
+          {/* PMUs inativas (círculos vermelhos) */}
+          {inactivePMUs.map((pmu) => (
+            <CircleMarker
+              key={`inactive-${pmu.pmuId}`}
+              center={[pmu.latitude || pmu.lat, pmu.longitude || pmu.lon]}
+              radius={8}
+              pathOptions={{
+                color: '#ef4444',
+                fillColor: '#ef4444',
+                fillOpacity: 0.6,
+                weight: 2
+              }}
+            >
+              <Popup>
+                <div className="p-2 min-w-[200px]">
+                  <h4 className="font-bold text-gray-800 mb-2">{pmu.pmuName}</h4>
+                  <div className="space-y-1 text-sm">
+                    <p><span className="font-medium">Status:</span> <span className="text-red-600 font-medium">Desconectada</span></p>
+                    <p><span className="font-medium">Região:</span> {pmu.area}</p>
+                    <p><span className="font-medium">Estado:</span> {pmu.state}</p>
+                    <p className="text-xs text-gray-500 mt-2">Sem dados disponíveis</p>
+                  </div>
+                </div>
+              </Popup>
+            </CircleMarker>
+          ))}
         </MapContainer>
       </div>
+    );
+  };
+
+  // Estrutura principal do painel sempre presente
+  return (
+    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 sm:p-4 pb-4 sm:pb-6 flex flex-col" style={{height: 'calc(100% - 4rem)'}}>
+      {/* Cabeçalho do painel */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0 flex-shrink-0">
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 bg-gradient-to-r from-green-500 to-blue-600 rounded-full animate-pulse"></div>
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+            Mapa do Sistema Elétrico
+          </h3>
+          <p className="text-xs sm:text-sm text-gray-500">
+            PMUs
+          </p>
+        </div>
+        {shouldShowMap && (
+          <div className="flex items-center space-x-2 text-xs text-gray-500">
+            <span>PMUs Ativas: <span className="text-green-600 font-medium">{realMeasurements.length}</span></span>
+            <span>•</span>
+            <span>Inativas: <span className="text-red-500 font-medium">{inactivePMUs.length}</span></span>
+          </div>
+        )}
+      </div>
+
+      {/* Conteúdo dinâmico do mapa */}
+      {renderMapContent()}
+      
+      {/* Informações do mapa - só aparece quando o mapa está carregado */}
+      {shouldShowMap && (
+        <div className="flex-shrink-0 mt-4 pt-3 border-t border-gray-100">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-gray-500">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>PMUs com dados em tempo real</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <span>PMUs sem dados</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <span>Atualização: <span className="text-green-600 font-medium">5s</span></span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 // Exportar com dynamic para evitar problemas de SSR
 export default dynamic(() => Promise.resolve(MapComponent), {
-  ssr: false,
-  loading: () => (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-      <div className="h-96 w-full rounded-lg bg-gray-100 dark:bg-gray-700 animate-pulse flex items-center justify-center">
-        <div className="text-gray-500 dark:text-gray-400">Carregando mapa...</div>
-      </div>
-    </div>
-  )
+  ssr: false
 });

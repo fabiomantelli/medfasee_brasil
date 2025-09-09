@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { cn } from '../../lib/utils';
+import { cn } from '../lib/utils';
 
 interface StatusIndicatorProps extends React.HTMLAttributes<HTMLDivElement> {
   status: 'online' | 'offline' | 'warning' | 'error' | 'loading';

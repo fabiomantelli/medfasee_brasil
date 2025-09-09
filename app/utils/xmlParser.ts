@@ -135,18 +135,68 @@ export class XMLParser {
 }
 
 // Utility function to load and parse XML
+async function fetchWithRetry(url: string, retries = 3, delay = 1000): Promise<Response> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      console.log(`🔍 XMLParser - Attempt ${i + 1} to fetch ${url}`);
+      // Try different URL formats
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001';
+      const urls = [
+        url,
+        `http://localhost:3001${url}`,
+        `${baseUrl}${url}`
+      ];
+      
+      let lastError;
+      for (const tryUrl of urls) {
+        try {
+          console.log(`🔍 XMLParser - Trying URL: ${tryUrl}`);
+          const response = await fetch(tryUrl);
+          if (response.ok) {
+            console.log(`🔍 XMLParser - Success with URL: ${tryUrl}`);
+            return response;
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
+        } catch (urlError) {
+          console.log(`🔍 XMLParser - Failed with URL ${tryUrl}:`, urlError);
+          lastError = urlError;
+        }
+      }
+      throw lastError;
+    } catch (error) {
+      console.warn(`🔍 XMLParser - Fetch attempt ${i + 1} failed:`, error);
+      if (i === retries - 1) throw error;
+      console.log(`🔍 XMLParser - Waiting ${delay}ms before retry...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error('All fetch attempts failed');
+}
+
 export async function loadPMUData(): Promise<{ pmus: PMUData[], config: WebServiceConfig }> {
   try {
-    const response = await fetch('/data.xml');
+    console.log('🔍 XMLParser - Starting to load PMU data from /data.xml');
+    const response = await fetchWithRetry('/data.xml');
+    console.log('🔍 XMLParser - Fetch response status:', response.status);
+    
     const xmlContent = await response.text();
+    console.log('🔍 XMLParser - XML content length:', xmlContent.length);
+    console.log('🔍 XMLParser - XML content preview:', xmlContent.substring(0, 200));
+    
     const parser = new XMLParser(xmlContent);
+    const pmus = parser.parsePMUs();
+    const config = parser.parseWebServiceConfig();
+    
+    console.log('🔍 XMLParser - Parsed PMUs count:', pmus.length);
+    console.log('🔍 XMLParser - Parsed config:', config);
+    console.log('🔍 XMLParser - Sample PMU:', pmus[0]);
     
     return {
-      pmus: parser.parsePMUs(),
-      config: parser.parseWebServiceConfig()
+      pmus,
+      config
     };
   } catch (error) {
-    console.error('Error loading PMU data:', error);
+    console.error('🔍 XMLParser - Error loading PMU data:', error);
     return { pmus: [], config: { address: '' } };
   }
 }
