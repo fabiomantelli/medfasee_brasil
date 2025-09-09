@@ -578,11 +578,11 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
             
             {/* Y-axis label */}
             <text 
-              x={20} 
+              x={15} 
               y={height / 2} 
               textAnchor="middle" 
               className="fill-slate-700 text-sm font-medium" 
-              transform={`rotate(-90, 20, ${height / 2})`}
+              transform={`rotate(-90, 15, ${height / 2})`}
             >
               Frequência (Hz)
             </text>

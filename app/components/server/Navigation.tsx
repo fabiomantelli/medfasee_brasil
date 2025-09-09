@@ -129,7 +129,7 @@ export default function Navigation({ currentPath }: NavigationProps) {
   return (
     <nav className="bg-white shadow-sm border-r border-gray-200 h-full flex flex-col w-60">
       {/* Logo/Brand */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="px-6 py-5 border-b border-gray-200" style={{paddingBottom: 'calc(1.25rem + 4px)'}}>
         <div className="flex items-center space-x-3">
           <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">MF</span>
