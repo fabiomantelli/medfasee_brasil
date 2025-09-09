@@ -339,7 +339,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
           </p>
         </div>
         
-        <div className="bg-gray-50 rounded-lg p-2 sm:p-3">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-2 sm:p-3 w-full sm:w-96 border border-gray-200 shadow-inner">
           <h4 className="text-sm font-medium text-gray-700 mb-2">
             Selecionar PMUs para Visualização
           </h4>
@@ -375,21 +375,17 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
         </div>
       </div>
       
-      <div className="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-1 border border-slate-300 shadow-inner overflow-hidden">
-        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full drop-shadow-sm">
+      <div className="flex-1 relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-1 border border-gray-200 shadow-inner overflow-hidden">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
           {/* Grid lines and gradients */}
           <defs>
             <pattern id="grid" width="40" height="20" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 20" fill="none" stroke="#64748b" strokeWidth="0.5" opacity="0.3" />
+              <path d="M 40 0 L 0 0 0 20" fill="none" stroke="#e2e8f0" strokeWidth="0.5" />
             </pattern>
-            <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.1"/>
-              <stop offset="50%" stopColor="#334155" stopOpacity="0.05"/>
-              <stop offset="100%" stopColor="#475569" stopOpacity="0.1"/>
-            </linearGradient>
+
           </defs>
-          <rect width={width} height={height} fill="url(#chartGradient)" rx="12" />
-          <rect width={width} height={height} fill="url(#grid)" rx="12" />
+
+
           
           {/* Reference lines */}
           <g>
@@ -402,7 +398,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
               stroke="#10b981" 
               strokeWidth="2" 
               strokeDasharray="8,4" 
-              opacity="0.8"
+
             />
             <text 
               x={width - padding + 10} 
@@ -421,7 +417,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
               stroke="#f59e0b" 
               strokeWidth="1" 
               strokeDasharray="4,2" 
-              opacity="0.4"
+
             />
             <line 
               x1={padding} 
@@ -431,7 +427,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
               stroke="#f59e0b" 
               strokeWidth="1" 
               strokeDasharray="4,2" 
-              opacity="0.4"
+
             />
           </g>
           
@@ -447,14 +443,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
             
             return (
               <g key={`${item.pmuId}-${pmuIndex}`}>
-                {/* Line shadow */}
-                <path
-                  d={pathData}
-                  fill="none"
-                  stroke="rgba(0,0,0,0.1)"
-                  strokeWidth="3"
-                  transform="translate(1,1)"
-                />
+
                 {/* Main line */}
                 <path
                   d={pathData}
@@ -463,7 +452,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="drop-shadow-sm"
+                  className=""
                 />
                 {/* Data points */}
                 {(item.data || []).map((point, index) => {
@@ -473,33 +462,9 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
                   
                   return (
                     <g key={`${item.pmuId}-point-${index}`}>
-                      {/* Outer glow */}
-                      <circle
-                        cx={x}
-                        cy={y}
-                        r="10"
-                        fill="none"
-                        stroke={color}
-                        strokeWidth="1"
-                        opacity="0.2"
-                        className="animate-pulse"
-                      />
-                      {/* Middle glow */}
-                      <circle
-                        cx={x}
-                        cy={y}
-                        r="7"
-                        fill={color}
-                        opacity="0.4"
-                        filter="blur(1px)"
-                      />
-                      {/* Point shadow */}
-                      <circle
-                        cx={x + 1}
-                        cy={y + 1}
-                        r={isLast ? "5" : "2"}
-                        fill="rgba(0,0,0,0.1)"
-                      />
+
+
+
                       {/* Main point */}
                       <circle
                         cx={x}
@@ -508,7 +473,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
                         fill={color}
                         stroke="rgba(255, 255, 255, 0.9)"
                         strokeWidth={isLast ? "2" : "1"}
-                        className={`${isLast ? "animate-pulse" : "hover:scale-125 transition-all duration-200"} drop-shadow-md`}
+                        className={`${isLast ? "animate-pulse" : "hover:scale-125 transition-all duration-200"}`}
                       />
                       {/* Inner core */}
                       <circle
@@ -516,7 +481,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
                         cy={y}
                         r={isLast ? "2" : "1"}
                         fill="rgba(255, 255, 255, 0.95)"
-                        className="drop-shadow-sm"
+                        className=""
                       />
                     </g>
                   );
@@ -654,6 +619,18 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
             </text>
           </g>
         </svg>
+      </div>
+      
+      {/* Informações do gráfico */}
+      <div className="flex-shrink-0 mt-4 pt-3 border-t border-gray-100">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-gray-500">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-1">
+              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+              <span>Frequência do sistema: 60 Hz</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

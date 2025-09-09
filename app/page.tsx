@@ -80,7 +80,7 @@ export default function Home() {
       { i: 'map', x: 6, y: 0, w: 6, h: 10, minW: 4, minH: 8 },
       { i: 'angular', x: 0, y: 10, w: 6, h: 10, minW: 4, minH: 8 },
       { i: 'frequency', x: 6, y: 10, w: 6, h: 10, minW: 4, minH: 8 },
-      { i: 'notifications', x: 0, y: 20, w: 12, h: 2, minW: 6, minH: 2 }
+      { i: 'notifications', x: 0, y: 20, w: 12, h: 6, minW: 6, minH: 2 }
     ],
     md: [
       { i: 'dashboard', x: 0, y: 0, w: 6, h: 10, minW: 4, minH: 8 },

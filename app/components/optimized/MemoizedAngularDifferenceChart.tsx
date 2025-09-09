@@ -409,30 +409,11 @@ const AngularDifferenceChartComponent = ({ systemData }: MemoizedAngularDifferen
             </p>
           </div>
           <p className="text-xs text-gray-500">
-            PMUs selecionadas: {selectedPMUs.size} • Referência: {referencePMU ? (availablePMUs.find(p => p.pmuId === referencePMU)?.pmuName || referencePMU) : 'Nenhuma'}
+            PMUs selecionadas: {selectedPMUs.size} • Referência: {referencePMU ? (availablePMUs.find(p => p.pmuId === referencePMU)?.pmuName || `PMU ${referencePMU}`) : 'Nenhuma'}
           </p>
         </div>
         
-        {/* Seletor de PMU de referência */}
-        <div className="bg-gray-50 rounded-lg p-2 sm:p-3">
-          <label className="text-sm font-medium text-gray-700 mb-2 block">PMU Referência:</label>
-          <select
-            value={referencePMU}
-            onChange={(e) => setReferencePMU(e.target.value)}
-            className="bg-white text-gray-900 px-3 py-2 rounded-lg text-sm border border-gray-300 focus:border-orange-500 focus:outline-none shadow-sm w-full"
-          >
-            {(availablePMUs || []).filter(pmu => selectedPMUs.has(pmu.pmuId)).map(pmu => (
-              <option key={pmu.pmuId} value={pmu.pmuId}>
-                {pmu.pmuName || `PMU ${pmu.pmuId}`}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Seleção de PMUs */}
-      <div className="mb-4 sm:mb-6 flex-shrink-0">
-        <div className="bg-gray-50 rounded-lg p-2 sm:p-3">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-2 sm:p-3 w-full sm:w-96 border border-gray-200 shadow-inner">
           <h4 className="text-sm font-medium text-gray-700 mb-2">
             Selecionar PMUs para Visualização
           </h4>
@@ -464,6 +445,26 @@ const AngularDifferenceChartComponent = ({ systemData }: MemoizedAngularDifferen
                 </button>
               );
             })}
+          </div>
+        </div>
+      </div>
+
+      {/* Seletor de PMU de referência - embaixo das PMUs selecionadas */}
+      <div className="mb-1 sm:mb-2 flex-shrink-0">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-2 sm:p-3 max-w-md border border-gray-200 shadow-inner">
+          <div className="flex items-center space-x-3">
+            <label className="text-sm font-medium text-gray-700 whitespace-nowrap">PMU Referência:</label>
+            <select
+              value={referencePMU}
+              onChange={(e) => setReferencePMU(e.target.value)}
+              className="bg-white text-gray-900 px-2 py-1.5 rounded-lg text-sm border border-gray-300 focus:border-orange-500 focus:outline-none shadow-sm flex-1 min-w-0"
+            >
+              {(availablePMUs || []).filter(pmu => selectedPMUs.has(pmu.pmuId)).map(pmu => (
+                <option key={pmu.pmuId} value={pmu.pmuId}>
+                  {pmu.pmuName || `PMU ${pmu.pmuId}`}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>

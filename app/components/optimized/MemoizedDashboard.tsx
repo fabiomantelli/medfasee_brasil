@@ -75,7 +75,7 @@ const MemoizedDashboard = ({
           </div>
         </div>
         
-        <div className="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-1 border border-slate-300 shadow-inner overflow-hidden flex items-center justify-center">
+        <div className="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-1 border border-slate-300 overflow-hidden flex items-center justify-center">
           <div className="text-center">
             <div className="text-gray-600 mb-2">
               <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
