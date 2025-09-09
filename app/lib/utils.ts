@@ -35,7 +35,7 @@ export function formatPercentage(value: number, decimals = 1) {
 // Modern utility functions for 2025
 
 // Debounce function for performance optimization
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number,
   immediate?: boolean
@@ -58,13 +58,13 @@ export function debounce<T extends (...args: any[]) => any>(
 }
 
 // Throttle function for performance optimization
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean;
   
-  return function executedFunction(this: any, ...args: Parameters<T>) {
+  return function executedFunction(this: unknown, ...args: Parameters<T>) {
     if (!inThrottle) {
       func.apply(this, args);
       inThrottle = true;
@@ -134,7 +134,7 @@ export function generateId(prefix = 'id'): string {
 }
 
 // Check if value is empty
-export function isEmpty(value: any): boolean {
+export function isEmpty(value: unknown): boolean {
   if (value == null) return true;
   if (typeof value === 'string') return value.trim().length === 0;
   if (Array.isArray(value)) return value.length === 0;
@@ -190,7 +190,7 @@ export const storage = {
     }
   },
   
-  set(key: string, value: any): boolean {
+  set(key: string, value: unknown): boolean {
     try {
       localStorage.setItem(key, JSON.stringify(value));
       return true;

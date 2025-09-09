@@ -58,20 +58,10 @@ const ClientTimestamp = () => {
 };
 
 export default function Home() {
-  // Modern PMU service initialization with Zustand
-  const { pmuService } = useDashboardStore();
-  
   // Modern hooks for dashboard management
   const { isInitialized } = useDashboardInitialization();
   const { measurements, regionData, isRealDataConnected, stats } = usePMUData();
-  const { selectedPMU, selectPMU } = usePMUSelection();
   const { isLoading } = useLoadingState();
-  
-  // Enhanced Zustand store integration with modern selectors
-  const {
-    error: storeError,
-    retryCount
-  } = useDashboardStore();
 
   // Estado para layouts dos painéis redimensionáveis - otimizado para mobile 2025
   const [layouts, setLayouts] = useState({
@@ -105,7 +95,7 @@ export default function Home() {
     ]
   });
 
-  const onLayoutChange = (layout: any, layouts: any) => {
+  const onLayoutChange = (layout: unknown, layouts: unknown) => {
     setLayouts(layouts);
     // Salvar no localStorage apenas no cliente para evitar erro de hidratação
     if (typeof window !== 'undefined') {
@@ -157,8 +147,8 @@ export default function Home() {
     
     const avgFreq = measurements && measurements.length > 0
       ? measurements
-          .filter((m: any) => m.frequency !== null)
-          .reduce((sum: number, m: any) => sum + (m.frequency || 0), 0) / measurements.length
+          .filter((m: { frequency: number | null }) => m.frequency !== null)
+          .reduce((sum: number, m: { frequency: number | null }) => sum + (m.frequency || 0), 0) / measurements.length
       : 60.0;
     
     let overallStatus: 'normal' | 'warning' | 'critical' = 'normal';
@@ -188,7 +178,7 @@ export default function Home() {
       status: overallStatus,
       regions: regionsObject
     };
-  }, [measurements, regionData]);
+  }, [measurements, regionData, isClient]);
 
   // Removed timestamp update interval to prevent infinite loops
 

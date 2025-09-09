@@ -55,7 +55,7 @@ export const selectRetryCount = (state: DashboardState) => state.retryCount;
 
 export const useDashboardStore = create<DashboardState>()(devtools(
   subscribeWithSelector(
-    immer((set, get) => ({
+    immer((set, _) => ({
       // Estado inicial otimizado
       pmuService: null,
       isRealDataConnected: false,

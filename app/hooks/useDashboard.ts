@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useDashboardStore } from '../stores/dashboardStore';
+import { PMUMeasurement } from '../services/pmuService';
 
 /**
  * Hook moderno 2025 para inicialização do dashboard
@@ -66,7 +67,7 @@ export const usePMUSelection = () => {
   const setSelectedPMUs = useDashboardStore(state => state.setSelectedPMUs);
   const pmuMeasurements = useDashboardStore(state => state.pmuMeasurements);
   
-  const [selectedPMU, setSelectedPMU] = useState<any>(null);
+  const [selectedPMU, setSelectedPMU] = useState<PMUMeasurement | null>(null);
   
   const selectPMU = useMemo(() => (pmuId: string) => {
     const pmu = pmuMeasurements.find(p => p.pmuId === pmuId);
