@@ -270,10 +270,10 @@ const MapComponent = ({ className }: OptimizedMapProps) => {
     // Estado de carregamento - diferencia webservice desconectado vs aguardando PMUs
     if (!isConnected) {
       return (
-        <div className="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-1 border border-slate-300 shadow-inner overflow-hidden flex items-center justify-center">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-2 sm:p-4 border border-slate-300 shadow-inner overflow-hidden flex items-center justify-center">
           <div className="text-center">
             <div className="text-gray-600 mb-2">
-              <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
@@ -290,27 +290,27 @@ const MapComponent = ({ className }: OptimizedMapProps) => {
     if (!shouldShowMap) {
       const pmuCount = pmuMeasurements?.length || 0;
       return (
-        <div className="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-1 border border-slate-300 shadow-inner overflow-hidden flex items-center justify-center">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-2 sm:p-4 border border-slate-300 shadow-inner overflow-hidden flex items-center justify-center">
           <div className="text-center">
             <div className="text-gray-600 mb-2">
-              <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
             <p className="text-gray-600 text-sm mb-1">
-              {pmuCount === 0 ? '⏳ Aguardando PMUs...' : '🗺️ Carregando mapa do sistema...'}
-            </p>
-            <p className="text-gray-500 text-xs">
-              {pmuCount === 0 ? 'Nenhuma PMU conectada ainda' : `${pmuCount} PMU${pmuCount > 1 ? 's' : ''} detectada${pmuCount > 1 ? 's' : ''}, carregando configuração...`}
-            </p>
-          </div>
+                {pmuCount === 0 ? '⏳ Carregando mapa...' : '🗺️ Carregando mapa do sistema...'}
+              </p>
+              <p className="text-gray-500 text-xs">
+                {pmuCount === 0 ? 'Aguardando dados das PMUs' : `${pmuCount} PMU${pmuCount > 1 ? 's' : ''} detectada${pmuCount > 1 ? 's' : ''}, carregando configuração...`}
+              </p>
+            </div>
         </div>
       );
     }
 
     // Renderizar o mapa quando tudo estiver pronto
     return (
-      <div className="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-1 border border-slate-300 shadow-inner overflow-hidden">
+      <div className="w-full h-full">
         <MapContainer
           center={[-14.2350, -51.9253]}
           zoom={4}
@@ -405,8 +405,10 @@ const MapComponent = ({ className }: OptimizedMapProps) => {
         )}
       </div>
 
-      {/* Conteúdo dinâmico do mapa */}
-      {renderMapContent()}
+      {/* Área do mapa */}
+      <div className="flex-1 relative">
+        {renderMapContent()}
+      </div>
       
       {/* Informações do mapa - só aparece quando o mapa está carregado */}
       {shouldShowMap && (
