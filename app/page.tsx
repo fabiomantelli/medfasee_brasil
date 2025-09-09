@@ -289,7 +289,7 @@ export default function Home() {
                 Dashboard Principal
               </h3>
             </div>
-            <div className="p-4 no-drag h-full overflow-hidden">
+            <div className="p-4 pb-6 no-drag h-full overflow-hidden">
               <Suspense fallback={
                 <div className="animate-pulse">
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>

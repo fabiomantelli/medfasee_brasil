@@ -216,7 +216,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
           <div className="flex items-center space-x-2">
             <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full animate-pulse"></div>
             <h3 className="text-lg sm:text-xl font-bold text-gray-900">
-              Histórico de Frequência
+              Frequência
             </h3>
             <p className="text-xs sm:text-sm text-gray-500">
               Hz
@@ -250,7 +250,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
           <div className="flex items-center space-x-2">
             <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full animate-pulse"></div>
             <h3 className="text-lg sm:text-xl font-bold text-gray-900">
-              Histórico de Frequência
+              Frequência
             </h3>
             <p className="text-xs sm:text-sm text-gray-500">
               Hz
@@ -328,7 +328,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
           <div className="flex items-center space-x-2 mb-1">
             <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full animate-pulse"></div>
             <h3 className="text-lg sm:text-xl font-bold text-gray-900">
-              Histórico de Frequência
+              Frequência
             </h3>
             <p className="text-xs sm:text-sm text-gray-500">
               Hz
@@ -343,7 +343,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
           <h4 className="text-sm font-medium text-gray-700 mb-2">
             Selecionar PMUs para Visualização
           </h4>
-          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
+          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto scrollbar-thin">
             {availablePMUs.map((pmu, index) => {
               const isSelected = selectedPMUs.includes(pmu.pmuId);
               const color = PMU_COLORS[index % PMU_COLORS.length];

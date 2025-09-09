@@ -33,7 +33,13 @@ const MemoizedDashboard = ({
   angularComponent
 }: MemoizedDashboardProps) => {
   // Use Zustand store directly
-  const { stats, pmuMeasurements, isRealDataConnected } = useDashboardStore();
+  const { stats, pmuMeasurements, isRealDataConnected, pmuService } = useDashboardStore();
+  
+  // Total PMUs do XML
+  const totalPMUs = pmuService?.getAllPMUs()?.length || 0;
+  
+  // PMUs ativas do webservice
+  const activePMUs = pmuMeasurements?.length || 0;
   
   // Calcular métricas em tempo real do store centralizado com memoização
   const systemHealth = stats.averageFrequency > 0 ? 'healthy' : 'disconnected';
@@ -56,142 +62,107 @@ const MemoizedDashboard = ({
   console.log('🔍 MemoizedDashboard - Stats from centralized store:', stats);
   console.log('🔍 MemoizedDashboard - PMU Measurements from store:', pmuMeasurements?.length || 0);
 
+  // Estado de carregamento quando não há PMUs conectadas
+  if (activePMUs === 0) {
+    return (
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 sm:p-4 pb-4 sm:pb-6 flex flex-col" style={{height: 'calc(100% - 4rem)'}}>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0 flex-shrink-0">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-gradient-to-r from-orange-500 to-red-600 rounded-full animate-pulse"></div>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+              Alertas e Estatísticas
+            </h3>
+          </div>
+        </div>
+        
+        <div className="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-1 border border-slate-300 shadow-inner overflow-hidden flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-gray-600 mb-2">
+              <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <p className="text-gray-600 text-sm mb-1">⏳ Aguardando PMUs...</p>
+            <p className="text-gray-500 text-xs">
+              Nenhuma PMU enviando dados no momento
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 p-6">
-      {/* Card de Status Geral */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Status do Sistema</h3>
-          <div className={`w-3 h-3 bg-${healthColor}-500 rounded-full animate-pulse`}></div>
-        </div>
-        
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600 dark:text-gray-400">Status:</span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium bg-${healthColor}-100 text-${healthColor}-800`}>
-              {healthLabel}
-            </span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600 dark:text-gray-400">Frequência Média:</span>
-            <span className="font-semibold text-blue-600">{(stats.averageFrequency || 0).toFixed(2)} Hz</span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600 dark:text-gray-400">PMUs Ativas:</span>
-            <span className="font-semibold text-green-600">{pmuMeasurements?.length || 0}/{pmuMeasurements?.length || 0}</span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600 dark:text-gray-400">Conectividade:</span>
-            <span className={`font-semibold ${isRealDataConnected ? 'text-green-600' : 'text-red-600'}`}>
-              {isRealDataConnected ? 'ONLINE' : 'OFFLINE'}
-            </span>
-          </div>
+    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 sm:p-4 pb-4 sm:pb-6 flex flex-col" style={{height: 'calc(100% - 4rem)'}}>
+      {/* Cabeçalho do painel */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0 flex-shrink-0">
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 bg-gradient-to-r from-orange-500 to-red-600 rounded-full animate-pulse"></div>
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+            Alertas e Estatísticas
+          </h3>
         </div>
       </div>
-
-      {/* Card de Mapa */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border-l-4 border-green-500">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Mapa do Sistema</h3>
-          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-        </div>
-        
-        <div className="h-48 bg-gray-50 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-          {mapComponent ? (
-            <div className="w-full h-full">{mapComponent}</div>
-          ) : (
-            <div className="text-center text-gray-500">
-              <div className="text-3xl mb-2">🗺️</div>
-              <div className="text-sm">Mapa do Sistema Elétrico</div>
+      
+      {/* Área do conteúdo */}
+      <div className="flex-1 relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-2 sm:p-4 border border-gray-200 shadow-inner overflow-hidden">
+        <div className="w-full h-full">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-blue-200">
+              <div className="text-2xl font-bold text-blue-700">{totalPMUs}</div>
+              <div className="text-sm text-gray-600 font-medium">Total PMUs</div>
+            </div>
+            
+            <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-green-200">
+              <div className="text-2xl font-bold text-green-700">{activePMUs}</div>
+              <div className="text-sm text-gray-600 font-medium">PMUs Ativas</div>
+            </div>
+            
+            <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-purple-200">
+              <div className="text-2xl font-bold text-purple-700">{(stats.averageFrequency || 0).toFixed(1)}Hz</div>
+              <div className="text-sm text-gray-600 font-medium">Freq. Média</div>
+            </div>
+            
+            <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-orange-200">
+              <div className="text-2xl font-bold text-orange-700">0</div>
+              <div className="text-sm text-gray-600 font-medium">Tentativas</div>
+            </div>
+          </div>
+          
+          {/* Erro se houver */}
+          {!isRealDataConnected && (
+            <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <span className="text-sm font-medium text-red-700 dark:text-red-300">Erro de Conectividade</span>
+              </div>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">Sem conexão com dados reais</p>
             </div>
           )}
+        
+          {/* Última atualização */}
+          <div className="mt-4 text-center text-xs text-gray-500">
+            Última atualização: {stats.lastUpdate || 'Nunca'}
+          </div>
         </div>
       </div>
-
-      {/* Card de Gráfico de Frequência */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border-l-4 border-purple-500">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Histórico de Frequência</h3>
-          <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
-        </div>
-        
-        <div className="h-48 bg-gray-50 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-          {chartComponent ? (
-            <div className="w-full h-full">{chartComponent}</div>
-          ) : (
-            <div className="text-center text-gray-500">
-              <div className="text-3xl mb-2">📊</div>
-              <div className="text-sm">Gráfico de Frequência</div>
+      
+      {/* Informações do painel */}
+      <div className="flex-shrink-0 mt-4 pt-3 border-t border-gray-100">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-gray-500">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-1">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <span>PMUs conectadas</span>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Card de Diferença Angular */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border-l-4 border-orange-500">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Diferença Angular</h3>
-          <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
-        </div>
-        
-        <div className="h-48 bg-gray-50 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-          {angularComponent ? (
-            <div className="w-full h-full">{angularComponent}</div>
-          ) : (
-            <div className="text-center text-gray-500">
-              <div className="text-3xl mb-2">📐</div>
-              <div className="text-sm">Módulo e Ângulo da Tensão Fase A</div>
+            <div className="flex items-center space-x-1">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Dados em tempo real</span>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Card de Alertas e Estatísticas */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border-l-4 border-red-500 lg:col-span-2 xl:col-span-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Alertas e Estatísticas</h3>
-          <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-        </div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{pmuMeasurements?.length || 0}</div>
-            <div className="text-sm text-blue-700 dark:text-blue-300">Total PMUs</div>
           </div>
-          
-          <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-            <div className="text-2xl font-bold text-green-600">{pmuMeasurements?.length || 0}</div>
-            <div className="text-sm text-green-700 dark:text-green-300">PMUs Ativas</div>
+          <div className="text-right">
+            <span>Status: <span className="text-green-600 font-medium">{isRealDataConnected ? 'Online' : 'Offline'}</span></span>
           </div>
-          
-          <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-            <div className="text-2xl font-bold text-purple-600">{(stats.averageFrequency || 0).toFixed(1)}Hz</div>
-            <div className="text-sm text-purple-700 dark:text-purple-300">Freq. Média</div>
-          </div>
-          
-          <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-            <div className="text-2xl font-bold text-orange-600">0</div>
-            <div className="text-sm text-orange-700 dark:text-orange-300">Tentativas</div>
-          </div>
-        </div>
-        
-        {/* Erro se houver */}
-        {!isRealDataConnected && (
-          <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-              <span className="text-sm font-medium text-red-700 dark:text-red-300">Erro de Conectividade</span>
-            </div>
-            <p className="text-xs text-red-600 dark:text-red-400 mt-1">Sem conexão com dados reais</p>
-          </div>
-        )}
-        
-        {/* Última atualização */}
-        <div className="mt-4 text-center text-xs text-gray-500">
-          Última atualização: {stats.lastUpdate ? new Date(stats.lastUpdate).toLocaleString() : 'Nunca'}
         </div>
       </div>
     </div>

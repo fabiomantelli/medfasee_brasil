@@ -323,20 +323,46 @@ const AngularDifferenceChartComponent = ({ systemData }: MemoizedAngularDifferen
     );
   }
 
-  // Estado sem PMUs selecionadas
+  // Estado sem PMUs selecionadas - mesmo padrão do Histórico de Frequência
   if (selectedPMUs.size === 0) {
+    const pmuCount = measurements?.length || 0;
     return (
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 flex flex-col items-center justify-center" style={{height: 'calc(100% - 4rem)'}}>
-        <div className="text-center">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 sm:p-4 pb-4 sm:pb-6 flex flex-col" style={{height: 'calc(100% - 4rem)'}}>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0 flex-shrink-0">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-gradient-to-r from-orange-500 to-red-600 rounded-full animate-pulse"></div>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+              Diferença Angular
+            </h3>
+            <p className="text-xs sm:text-sm text-gray-500">
+              Fasores
+            </p>
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Selecione PMUs para Visualizar</h3>
-          <p className="text-gray-600 mb-4">
-            Escolha pelo menos uma PMU para ver a diferença angular no gráfico polar.
-          </p>
+        </div>
+        
+        <div className="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-1 border border-slate-300 shadow-inner overflow-hidden flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-gray-600 mb-2">
+              <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            {pmuCount === 0 ? (
+              <>
+                <p className="text-gray-600 text-sm mb-1">⏳ Aguardando PMUs...</p>
+                <p className="text-gray-500 text-xs">
+                  Nenhuma PMU enviando dados no momento
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-600 text-sm mb-1">📊 Coletando dados de tensão...</p>
+                <p className="text-gray-500 text-xs">
+                  {pmuCount} PMU{pmuCount > 1 ? 's' : ''} conectada{pmuCount > 1 ? 's' : ''}, construindo histórico...
+                </p>
+              </>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -383,7 +409,7 @@ const AngularDifferenceChartComponent = ({ systemData }: MemoizedAngularDifferen
           <h4 className="text-sm font-medium text-gray-700 mb-2">
             Selecionar PMUs para Visualização
           </h4>
-          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
+          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto scrollbar-thin">
             {(availablePMUs || []).map((pmu, index) => {
               const isSelected = selectedPMUs.has(pmu.pmuId);
               const color = getPMUColor(pmu.pmuId);
@@ -392,23 +418,22 @@ const AngularDifferenceChartComponent = ({ systemData }: MemoizedAngularDifferen
                 <button
                   key={pmu.pmuId}
                   onClick={() => togglePMU(pmu.pmuId)}
-                  className={`
-                    px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex items-center space-x-1
-                    ${isSelected 
-                      ? 'text-white shadow-md transform scale-105' 
-                      : 'bg-white text-gray-600 border border-gray-300 hover:border-gray-400'
-                    }
-                  `}
-                  style={{
-                    backgroundColor: isSelected ? color : undefined,
-                    borderColor: isSelected ? color : undefined
-                  }}
+                  className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 hover:scale-105 ${
+                    isSelected 
+                      ? 'text-white shadow-md' 
+                      : 'text-gray-600 bg-white hover:bg-gray-100 shadow-sm border border-gray-200'
+                  }`}
+                  style={isSelected ? { backgroundColor: color } : undefined}
                 >
-                  <div 
-                    className="w-2 h-2 rounded-full" 
-                    style={{ backgroundColor: isSelected ? 'white' : color }}
-                  ></div>
-                  <span>{pmu.pmuName || `PMU ${pmu.pmuId}`}</span>
+                  <div className="flex items-center space-x-1">
+                    <div 
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        isSelected ? 'bg-white/80' : 'bg-current opacity-50'
+                      }`}
+                      style={!isSelected ? { backgroundColor: color } : undefined}
+                    ></div>
+                    <span>{pmu.pmuName || `PMU ${pmu.pmuId}`}</span>
+                  </div>
                 </button>
               );
             })}

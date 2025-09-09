@@ -90,14 +90,28 @@ export const useDashboardStore = create<DashboardState>()(devtools(
           ? measurements.reduce((sum, m) => sum + (m.frequency || 0), 0) / measurements.length 
           : 0;
         
+        // Usar timestamp das PMUs do webservice se disponível
+        let lastUpdateTime = 'Nunca';
+        if (measurements.length > 0) {
+          // Pegar o timestamp mais recente das PMUs
+          const latestTimestamp = measurements
+            .map(m => m.timestamp)
+            .filter(t => t && t !== '2024-01-01T00:00:00.000Z')
+            .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
+          
+          if (latestTimestamp) {
+            lastUpdateTime = new Date(latestTimestamp).toLocaleTimeString('pt-BR');
+          }
+        }
+        
         state.stats = {
           totalPMUs: measurements.length,
           activePMUs,
           averageFrequency: Number(avgFreq.toFixed(3)),
-          lastUpdate: new Date().toLocaleTimeString('pt-BR')
+          lastUpdate: lastUpdateTime
         };
         
-        state.lastUpdate = new Date().toLocaleTimeString('pt-BR');
+        state.lastUpdate = lastUpdateTime;
       }),
       
       setRegionData: (data) => set((state) => {
