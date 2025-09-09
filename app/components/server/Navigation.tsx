@@ -127,7 +127,7 @@ export default function Navigation({ currentPath }: NavigationProps) {
   const navItems = getNavigationItems(currentPath);
 
   return (
-    <nav className="bg-white shadow-sm border-r border-gray-200 h-full flex flex-col">
+    <nav className="bg-white shadow-sm border-r border-gray-200 h-full flex flex-col w-60">
       {/* Logo/Brand */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">

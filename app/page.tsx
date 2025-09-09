@@ -73,7 +73,7 @@ export default function Home() {
     retryCount
   } = useDashboardStore();
 
-  // Estado para layouts dos painéis redimensionáveis
+  // Estado para layouts dos painéis redimensionáveis - otimizado para mobile 2025
   const [layouts, setLayouts] = useState({
     lg: [
       { i: 'dashboard', x: 0, y: 0, w: 6, h: 10, minW: 4, minH: 8 },
@@ -90,11 +90,18 @@ export default function Home() {
       { i: 'notifications', x: 0, y: 20, w: 12, h: 2, minW: 6, minH: 2 }
     ],
     sm: [
-      { i: 'dashboard', x: 0, y: 0, w: 6, h: 10, minW: 6, minH: 8 },
-      { i: 'map', x: 0, y: 10, w: 6, h: 10, minW: 6, minH: 8 },
-      { i: 'angular', x: 0, y: 20, w: 6, h: 10, minW: 6, minH: 8 },
-      { i: 'frequency', x: 0, y: 30, w: 6, h: 10, minW: 6, minH: 8 },
-      { i: 'notifications', x: 0, y: 40, w: 6, h: 2, minW: 6, minH: 2 }
+      { i: 'dashboard', x: 0, y: 0, w: 6, h: 8, minW: 6, minH: 6 },
+      { i: 'map', x: 0, y: 8, w: 6, h: 8, minW: 6, minH: 6 },
+      { i: 'frequency', x: 0, y: 16, w: 6, h: 8, minW: 6, minH: 6 },
+      { i: 'angular', x: 0, y: 24, w: 6, h: 8, minW: 6, minH: 6 },
+      { i: 'notifications', x: 0, y: 32, w: 6, h: 3, minW: 6, minH: 2 }
+    ],
+    xs: [
+      { i: 'dashboard', x: 0, y: 0, w: 4, h: 6, minW: 4, minH: 4 },
+      { i: 'map', x: 0, y: 6, w: 4, h: 6, minW: 4, minH: 4 },
+      { i: 'frequency', x: 0, y: 12, w: 4, h: 6, minW: 4, minH: 4 },
+      { i: 'angular', x: 0, y: 18, w: 4, h: 6, minW: 4, minH: 4 },
+      { i: 'notifications', x: 0, y: 24, w: 4, h: 3, minW: 4, minH: 2 }
     ]
   });
 
@@ -267,7 +274,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Layout Principal com Painéis Redimensionáveis */}
+        {/* Layout Principal com Painéis Redimensionáveis - Mobile Optimized 2025 */}
         <ResponsiveGridLayout
           className="layout"
           layouts={layouts}
@@ -275,21 +282,21 @@ export default function Home() {
           breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
           cols={{ lg: 12, md: 12, sm: 6, xs: 4, xxs: 2 }}
           rowHeight={60}
-          isDraggable={true}
-          isResizable={true}
-          margin={[16, 16]}
-          containerPadding={[0, 0]}
+          isDraggable={typeof window !== 'undefined' && window.innerWidth > 768}
+          isResizable={typeof window !== 'undefined' && window.innerWidth > 768}
+          margin={typeof window !== 'undefined' && window.innerWidth <= 768 ? [8, 8] : [16, 16]}
+          containerPadding={typeof window !== 'undefined' && window.innerWidth <= 768 ? [8, 8] : [0, 0]}
           draggableCancel=".no-drag"
         >
           {/* Dashboard Principal */}
           <div key="dashboard" className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-3 drag-handle cursor-move">
-              <h3 className="text-lg font-semibold text-white flex items-center">
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-3 md:px-4 py-2 md:py-3 drag-handle cursor-move panel-header">
+              <h3 className="text-sm md:text-lg font-semibold text-white flex items-center">
                 <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
                 Dashboard Principal
               </h3>
             </div>
-            <div className="p-4 pb-6 no-drag h-full overflow-hidden">
+            <div className="p-2 md:p-4 pb-6 no-drag h-full overflow-hidden panel-content">
               <Suspense fallback={
                 <div className="animate-pulse">
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
@@ -303,13 +310,13 @@ export default function Home() {
           
           {/* Mapa do Brasil */}
           <div key="map" className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-            <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3 drag-handle cursor-move">
-              <h3 className="text-lg font-semibold text-white flex items-center">
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-3 md:px-4 py-2 md:py-3 drag-handle cursor-move panel-header">
+              <h3 className="text-sm md:text-lg font-semibold text-white flex items-center">
                 <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
                 Mapa do Sistema Elétrico
               </h3>
             </div>
-            <div className="p-4 no-drag h-full overflow-hidden">
+            <div className="p-2 md:p-4 no-drag h-full overflow-hidden panel-content">
               <Suspense fallback={
                 <div className="animate-pulse">
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
@@ -326,13 +333,13 @@ return <RealBrazilMapComponent />;
           
           {/* Painel de Frequência */}
           <div key="frequency" className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-            <div className="bg-gradient-to-r from-purple-500 to-indigo-600 px-4 py-3 drag-handle cursor-move">
-              <h3 className="text-lg font-semibold text-white flex items-center">
+            <div className="bg-gradient-to-r from-purple-500 to-indigo-600 px-3 md:px-4 py-2 md:py-3 drag-handle cursor-move panel-header">
+              <h3 className="text-sm md:text-lg font-semibold text-white flex items-center">
                 <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
                 Histórico de Frequência
               </h3>
             </div>
-            <div className="p-4 no-drag h-full overflow-hidden">
+            <div className="p-2 md:p-4 no-drag h-full overflow-hidden panel-content">
               <Suspense fallback={
                     <div className="animate-pulse">
                       <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4"></div>
@@ -346,13 +353,13 @@ return <RealBrazilMapComponent />;
           
           {/* Painel de Diferença Angular */}
           <div key="angular" className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-            <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-3 drag-handle cursor-move">
-              <h3 className="text-lg font-semibold text-white flex items-center">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-3 md:px-4 py-2 md:py-3 drag-handle cursor-move panel-header">
+              <h3 className="text-sm md:text-lg font-semibold text-white flex items-center">
                 <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
                 Diferença Angular
               </h3>
             </div>
-            <div className="p-4 no-drag h-full overflow-hidden">
+            <div className="p-2 md:p-4 no-drag h-full overflow-hidden panel-content">
               <Suspense fallback={
                 <div className="animate-pulse">
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
@@ -369,13 +376,13 @@ return <RealBrazilMapComponent />;
           
           {/* Sistema de Notificações */}
           <div key="notifications" className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-            <div className="bg-gradient-to-r from-red-500 to-pink-600 px-4 py-3 drag-handle cursor-move">
-              <h3 className="text-lg font-semibold text-white flex items-center">
+            <div className="bg-gradient-to-r from-red-500 to-pink-600 px-3 md:px-4 py-2 md:py-3 drag-handle cursor-move panel-header">
+              <h3 className="text-sm md:text-lg font-semibold text-white flex items-center">
                 <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
                 Notificações do Sistema
               </h3>
             </div>
-            <div className="p-4 no-drag h-full overflow-hidden">
+            <div className="p-2 md:p-4 no-drag h-full overflow-hidden panel-content">
               <Suspense fallback={
                 <div className="animate-pulse">
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>

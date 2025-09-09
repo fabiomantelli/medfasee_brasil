@@ -4,6 +4,7 @@ import React from 'react';
 import Navigation from './Navigation';
 import DashboardMetrics from './DashboardMetrics';
 import { SuspenseWrapper } from '../ui/Loading';
+import MobileMenu from '../ui/MobileMenu';
 
 // Server Component for optimized dashboard layout
 // Provides structure and initial data on server-side
@@ -18,7 +19,7 @@ interface DashboardLayoutProps {
 // Server-side layout configuration
 const getLayoutConfig = () => ({
   navigation: {
-    width: '280px',
+    width: '240px',
     collapsible: true,
     position: 'left' as const
   },
@@ -33,7 +34,7 @@ const getLayoutConfig = () => ({
 });
 
 // Header Client Component para evitar problemas de hidratação
-const DashboardHeader: React.FC = () => {
+const DashboardHeader: React.FC<{ currentPath?: string }> = ({ currentPath }) => {
   const [currentTime, setCurrentTime] = React.useState<string>('');
   const [isClient, setIsClient] = React.useState(false);
 
@@ -62,10 +63,15 @@ const DashboardHeader: React.FC = () => {
   }, [isClient]);
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
+    <header className="bg-white border-b border-gray-200 px-6 py-4 relative">
+      {/* Mobile menu - only visible on mobile */}
+      <div className="md:hidden">
+        <MobileMenu currentPath={currentPath} />
+      </div>
+      
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+        <div className="ml-12 md:ml-0">
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">
             Dashboard de Monitoramento
           </h1>
           <p className="text-sm text-gray-600 mt-1">
@@ -80,8 +86,8 @@ const DashboardHeader: React.FC = () => {
             <span className="text-sm text-gray-600">Tempo Real</span>
           </div>
           
-          {/* Quick actions */}
-          <div className="flex items-center space-x-2">
+          {/* Quick actions - hidden on small screens */}
+          <div className="hidden sm:flex items-center space-x-2">
             <button className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
               Exportar Dados
             </button>
@@ -106,12 +112,14 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Navigation Sidebar */}
+      {/* Mobile Menu - Only visible on mobile */}
+      <div className="md:hidden">
+        <MobileMenu currentPath={currentPath} />
+      </div>
+
+      {/* Navigation Sidebar - Hidden on mobile */}
       {showNavigation && (
-        <aside 
-          className="flex-shrink-0 bg-white border-r border-gray-200"
-          style={{ width: config.navigation.width }}
-        >
+        <aside className="hidden md:flex flex-shrink-0">
           <Navigation currentPath={currentPath} />
         </aside>
       )}
@@ -119,11 +127,11 @@ export default function DashboardLayout({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <DashboardHeader />
+        <DashboardHeader currentPath={currentPath} />
 
         {/* Content */}
-        <main className="flex-1 overflow-auto">
-          <div className="p-6">
+        <main className="flex-1 overflow-auto bg-gray-50">
+          <div className="px-6 py-4">
             {/* Server-rendered metrics - Temporarily disabled to prevent hydration conflicts */}
             {/* {showMetrics && (
               <SuspenseWrapper type="dashboard">
