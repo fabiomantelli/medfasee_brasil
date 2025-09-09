@@ -161,46 +161,6 @@ const MapComponent = ({ className }: OptimizedMapProps) => {
     });
   };
 
-  // Função para criar ícones inativos modernos (PMUs sem dados)
-  const createInactiveIcon = () => {
-    return L.divIcon({
-      className: 'custom-marker-inactive',
-      html: `
-        <div style="
-          background: linear-gradient(135deg, #EF4444 0%, #dc2626 100%);
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          border: 2px solid white;
-          box-shadow: 0 0 0 3px #ef444422, 0 4px 12px rgba(0,0,0,0.15);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.3s ease;
-          cursor: pointer;
-          opacity: 0.8;
-        ">
-          <div style="
-            width: 6px;
-            height: 6px;
-            background-color: white;
-            border-radius: 50%;
-            box-shadow: 0 0 2px rgba(0,0,0,0.2);
-          "></div>
-        </div>
-        <style>
-          .custom-marker-inactive:hover div {
-            transform: scale(1.1);
-            opacity: 1;
-            box-shadow: 0 0 0 4px #ef444433, 0 6px 16px rgba(0,0,0,0.2);
-          }
-        </style>
-      `,
-      iconSize: [26, 26],
-      iconAnchor: [13, 13]
-    });
-  };
-
   // DADOS OTIMIZADOS - Mostrar PMUs com qualquer dado válido mais rapidamente
   const realMeasurements = (frequencyData || []).filter(pmu => {
     const hasValidFreq = pmu.frequency > 0;
