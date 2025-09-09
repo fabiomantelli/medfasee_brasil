@@ -32,21 +32,6 @@ interface OptimizedMapProps {
   className?: string;
 }
 
-// Coordenadas das capitais das regiões do Brasil
-const regionCoordinates = {
-  north: { lat: -3.1190, lng: -60.0217, name: 'Norte (Manaus)' },
-  northeast: { lat: -12.9714, lng: -38.5014, name: 'Nordeste (Salvador)' },
-  centerwest: { lat: -15.8267, lng: -47.9218, name: 'Centro-Oeste (Brasília)' },
-  southeast: { lat: -23.5505, lng: -46.6333, name: 'Sudeste (São Paulo)' },
-  south: { lat: -25.4284, lng: -49.2733, name: 'Sul (Curitiba)' }
-};
-
-const getStatusColor = (frequency: number): string => {
-  if (frequency >= 59.9 && frequency <= 60.1) return '#10b981'; // Verde
-  if (frequency >= 59.5 && frequency <= 60.5) return '#f59e0b'; // Amarelo
-  return '#ef4444'; // Vermelho
-};
-
 const getStatusText = (frequency: number): string => {
   if (frequency >= 59.9 && frequency <= 60.1) return 'Normal';
   if (frequency >= 59.5 && frequency <= 60.5) return 'Atenção';
@@ -57,7 +42,7 @@ const getStatusText = (frequency: number): string => {
  * Componente de mapa otimizado para 2025
  * Sem React.memo - dados mudam constantemente a cada 5 segundos
  */
-const MapComponent = ({ className }: OptimizedMapProps) => {
+const MapComponent = ({}: OptimizedMapProps) => {
   // Seletores otimizados - apenas re-renderiza quando dados específicos mudam
   const pmuMeasurements = useDashboardStore(state => state.pmuMeasurements);
   const isConnected = useDashboardStore(state => state.isRealDataConnected);
@@ -96,8 +81,11 @@ const MapComponent = ({ className }: OptimizedMapProps) => {
   );
   
   // Importações do Leaflet dentro do componente para evitar problemas de SSR
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { MapContainer, TileLayer, Marker, Popup, CircleMarker } = require('react-leaflet');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const L = require('leaflet');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   require('leaflet-defaulticon-compatibility');
 
   // Estado local mínimo - apenas PMU selecionada
@@ -111,7 +99,7 @@ const MapComponent = ({ className }: OptimizedMapProps) => {
         setSelectedPMU(updatedPMU);
       }
     }
-  }, [frequencyData, selectedPMU?.pmuId]);
+  }, [frequencyData, selectedPMU]);
 
   // Função para criar ícones customizados modernos para 2025
   const createCustomIcon = (frequency: number) => {

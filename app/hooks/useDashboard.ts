@@ -71,7 +71,7 @@ export const usePMUSelection = () => {
   
   const selectPMU = useMemo(() => (pmuId: string) => {
     const pmu = pmuMeasurements.find(p => p.pmuId === pmuId);
-    setSelectedPMU(pmu);
+    setSelectedPMU(pmu || null);
   }, [pmuMeasurements]);
   
   return {

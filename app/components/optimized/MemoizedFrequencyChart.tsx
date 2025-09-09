@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { usePMUData } from '../../hooks/useDashboard';
+import { PMUMeasurement } from '../../services/pmuService';
 
 interface PMUDataPoint {
   timestamp: Date;
@@ -23,7 +24,7 @@ const PMU_COLORS = [
 const FrequencyChartComponent = ({}: MemoizedFrequencyChartProps) => {
   const { measurements, isRealDataConnected, allMeasurements } = usePMUData();
   const [isClient, setIsClient] = useState(false);
-  const [availablePMUs, setAvailablePMUs] = useState<{ id: string; name: string; frequency: number }[]>([]);
+  const [availablePMUs, setAvailablePMUs] = useState<PMUMeasurement[]>([]);
   const [selectedPMUs, setSelectedPMUs] = React.useState<string[]>([]);
   const [pmuData, setPmuData] = useState<Record<string, PMUDataPoint[]>>({});
   

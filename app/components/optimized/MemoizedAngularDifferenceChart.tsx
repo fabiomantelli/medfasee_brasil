@@ -217,8 +217,8 @@ const AngularDifferenceChartComponent = ({}: MemoizedAngularDifferenceChartProps
       return [
         // Linha do fasor (do centro até o ponto)
         {
-          type: 'scatterpolar',
-          mode: 'lines',
+          type: 'scatterpolar' as const,
+          mode: 'lines' as const,
           r: [0, data.r],
           theta: [relativeAngle, relativeAngle],
           line: {
@@ -256,9 +256,9 @@ const AngularDifferenceChartComponent = ({}: MemoizedAngularDifferenceChartProps
         gridcolor: 'rgba(102,102,102,0.4)',
         linecolor: 'rgba(102,102,102,0.6)',
         tickfont: { color: '#666666' },
-        direction: 'counterclockwise',
+        direction: 'counterclockwise' as const,
         rotation: 0,
-        tickmode: 'linear',
+        tickmode: 'linear' as const,
         tick0: 0,
         dtick: 30
       }
@@ -275,7 +275,7 @@ const AngularDifferenceChartComponent = ({}: MemoizedAngularDifferenceChartProps
   const config = {
     displayModeBar: true,
     displaylogo: false,
-    modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+    modeBarButtonsToRemove: ['pan2d' as const, 'lasso2d' as const, 'select2d' as const],
     responsive: true,
     useResizeHandler: true,
     autosizable: true

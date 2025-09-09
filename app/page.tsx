@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense, useState, useEffect } from 'react';
-import { Responsive, WidthProvider } from 'react-grid-layout';
+import { Responsive, WidthProvider, Layouts } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 // Lazy loading para componentes pesados - otimização de performance
@@ -56,6 +56,23 @@ const ClientTimestamp = () => {
   return <span>{timestamp}</span>;
 };
 
+type LayoutItem = {
+  i: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  minW: number;
+  minH: number;
+};
+
+type DashboardLayouts = {
+  lg: LayoutItem[];
+  md: LayoutItem[];
+  sm: LayoutItem[];
+  xs: LayoutItem[];
+};
+
 export default function Home() {
   // Modern hooks for dashboard management
   const { isInitialized } = useDashboardInitialization();
@@ -63,7 +80,7 @@ export default function Home() {
   const { isLoading } = useLoadingState();
 
   // Estado para layouts dos painéis redimensionáveis - otimizado para mobile 2025
-  const [layouts, setLayouts] = useState({
+  const [layouts, setLayouts] = useState<DashboardLayouts>({
     lg: [
       { i: 'dashboard', x: 0, y: 0, w: 6, h: 10, minW: 4, minH: 8 },
       { i: 'map', x: 6, y: 0, w: 6, h: 10, minW: 4, minH: 8 },
@@ -94,7 +111,7 @@ export default function Home() {
     ]
   });
 
-  const onLayoutChange = (layout: unknown, layouts: unknown) => {
+  const onLayoutChange = (layout: unknown, layouts: DashboardLayouts) => {
     setLayouts(layouts);
     // Salvar no localStorage apenas no cliente para evitar erro de hidratação
     if (typeof window !== 'undefined') {
@@ -335,7 +352,7 @@ return <RealBrazilMapComponent />;
                       <div className="h-96 bg-gray-200 dark:bg-gray-700 rounded"></div>
                     </div>
                   }>
-                    <FrequencyChartComponent systemData={systemData} />
+                    <FrequencyChartComponent />
                   </Suspense>
             </div>
           </div>
