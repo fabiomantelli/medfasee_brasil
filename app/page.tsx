@@ -41,8 +41,7 @@ const DashboardLayout = dynamic(() => import('./components/server/DashboardLayou
 
 // Dynamic imports for client-side components
 // const PMUInitializer = dynamic(() => import('./components/PMUInitializer'), { ssr: false });
-import { useDashboardInitialization, usePMUData, usePMUSelection, useLoadingState } from './hooks/useDashboard';
-import { useDashboardStore } from './stores/dashboardStore';
+import { useDashboardInitialization, usePMUData, useLoadingState } from './hooks/useDashboard';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 

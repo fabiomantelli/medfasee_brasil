@@ -37,7 +37,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
   const { measurements, isRealDataConnected } = usePMUData();
   const [isClient, setIsClient] = useState(false);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
-  const [availablePMUs, setAvailablePMUs] = useState<any[]>([]);
+  const [availablePMUs, setAvailablePMUs] = useState<{ id: string; name: string; frequency: number }[]>([]);
   const [selectedPMUs, setSelectedPMUs] = React.useState<string[]>([]);
   const [pmuData, setPmuData] = useState<Record<string, PMUDataPoint[]>>({});
   
@@ -81,7 +81,6 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
   }, []);
 
   const maxPoints = 30; // Máximo de 30 pontos na tela
-  const updateInterval = 5000; // 5 segundos entre atualizações
 
   // Initialize selected PMUs with useMemo to prevent unnecessary re-renders
   const initialPMUs = React.useMemo(() => {
@@ -107,7 +106,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
     if (initialPMUs.length > 0 && selectedPMUs.length === 0) {
       setSelectedPMUs(initialPMUs);
     }
-  }, [initialPMUs]);
+  }, [initialPMUs, selectedPMUs.length]);
 
   // Update available PMUs when measurements change
   React.useEffect(() => {
@@ -197,8 +196,8 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
     });
   };
 
-  // Filter data for selected PMUs
-  const filteredData = React.useMemo(() => {
+  // Process data for chart rendering
+  const chartData = React.useMemo(() => {
     if (!pmuData || Object.keys(pmuData).length === 0) {
       return [];
     }
@@ -211,7 +210,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
     const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
     
     return sortedTimestamps.map(timestamp => {
-      const dataPoint: any = { timestamp: new Date(timestamp) };
+      const dataPoint: Record<string, number | Date> = { timestamp: new Date(timestamp) };
       
       selectedPMUs.forEach(pmuId => {
         if (pmuData[pmuId]) {
