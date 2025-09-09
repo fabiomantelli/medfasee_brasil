@@ -87,21 +87,21 @@ export default function Home() {
       { i: 'map', x: 6, y: 0, w: 6, h: 10, minW: 4, minH: 8 },
       { i: 'angular', x: 0, y: 10, w: 6, h: 10, minW: 4, minH: 8 },
       { i: 'frequency', x: 6, y: 10, w: 6, h: 10, minW: 4, minH: 8 },
-      { i: 'notifications', x: 0, y: 20, w: 12, h: 2, minW: 6, minH: 2 }
+      { i: 'notifications', x: 0, y: 20, w: 12, h: 6, minW: 6, minH: 4 }
     ],
     sm: [
       { i: 'dashboard', x: 0, y: 0, w: 6, h: 8, minW: 6, minH: 6 },
       { i: 'map', x: 0, y: 8, w: 6, h: 8, minW: 6, minH: 6 },
       { i: 'frequency', x: 0, y: 16, w: 6, h: 8, minW: 6, minH: 6 },
       { i: 'angular', x: 0, y: 24, w: 6, h: 8, minW: 6, minH: 6 },
-      { i: 'notifications', x: 0, y: 32, w: 6, h: 3, minW: 6, minH: 2 }
+      { i: 'notifications', x: 0, y: 32, w: 6, h: 6, minW: 6, minH: 4 }
     ],
     xs: [
       { i: 'dashboard', x: 0, y: 0, w: 4, h: 6, minW: 4, minH: 4 },
       { i: 'map', x: 0, y: 6, w: 4, h: 6, minW: 4, minH: 4 },
       { i: 'frequency', x: 0, y: 12, w: 4, h: 6, minW: 4, minH: 4 },
       { i: 'angular', x: 0, y: 18, w: 4, h: 6, minW: 4, minH: 4 },
-      { i: 'notifications', x: 0, y: 24, w: 4, h: 3, minW: 4, minH: 2 }
+      { i: 'notifications', x: 0, y: 24, w: 4, h: 6, minW: 4, minH: 4 }
     ]
   });
 
@@ -290,9 +290,9 @@ export default function Home() {
         >
           {/* Dashboard Principal */}
           <div key="dashboard" className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-3 md:px-4 py-2 md:py-3 drag-handle cursor-move panel-header">
+            <div className="bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 px-3 md:px-4 py-2 md:py-3 drag-handle cursor-move panel-header">
               <h3 className="text-sm md:text-lg font-semibold text-white flex items-center">
-                <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
+                <div className="w-2 h-2 bg-emerald-400 rounded-full mr-2 animate-pulse"></div>
                 Dashboard Principal
               </h3>
             </div>
@@ -310,9 +310,9 @@ export default function Home() {
           
           {/* Mapa do Brasil */}
           <div key="map" className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-            <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-3 md:px-4 py-2 md:py-3 drag-handle cursor-move panel-header">
+            <div className="bg-gradient-to-r from-emerald-600 via-teal-700 to-cyan-800 px-3 md:px-4 py-2 md:py-3 drag-handle cursor-move panel-header">
               <h3 className="text-sm md:text-lg font-semibold text-white flex items-center">
-                <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
+                <div className="w-2 h-2 bg-cyan-300 rounded-full mr-2 animate-pulse"></div>
                 Mapa do Sistema Elétrico
               </h3>
             </div>
@@ -333,9 +333,9 @@ return <RealBrazilMapComponent />;
           
           {/* Painel de Frequência */}
           <div key="frequency" className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-            <div className="bg-gradient-to-r from-purple-500 to-indigo-600 px-3 md:px-4 py-2 md:py-3 drag-handle cursor-move panel-header">
+            <div className="bg-gradient-to-r from-indigo-600 via-purple-700 to-violet-800 px-3 md:px-4 py-2 md:py-3 drag-handle cursor-move panel-header">
               <h3 className="text-sm md:text-lg font-semibold text-white flex items-center">
-                <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
+                <div className="w-2 h-2 bg-violet-300 rounded-full mr-2 animate-pulse"></div>
                 Histórico de Frequência
               </h3>
             </div>
@@ -353,9 +353,9 @@ return <RealBrazilMapComponent />;
           
           {/* Painel de Diferença Angular */}
           <div key="angular" className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-            <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-3 md:px-4 py-2 md:py-3 drag-handle cursor-move panel-header">
+            <div className="bg-gradient-to-r from-amber-600 via-orange-700 to-red-700 px-3 md:px-4 py-2 md:py-3 drag-handle cursor-move panel-header">
               <h3 className="text-sm md:text-lg font-semibold text-white flex items-center">
-                <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
+                <div className="w-2 h-2 bg-amber-300 rounded-full mr-2 animate-pulse"></div>
                 Diferença Angular
               </h3>
             </div>
@@ -376,9 +376,9 @@ return <RealBrazilMapComponent />;
           
           {/* Sistema de Notificações */}
           <div key="notifications" className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-            <div className="bg-gradient-to-r from-red-500 to-pink-600 px-3 md:px-4 py-2 md:py-3 drag-handle cursor-move panel-header">
+            <div className="bg-gradient-to-r from-rose-600 via-pink-700 to-fuchsia-800 px-3 md:px-4 py-2 md:py-3 drag-handle cursor-move panel-header">
               <h3 className="text-sm md:text-lg font-semibold text-white flex items-center">
-                <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
+                <div className="w-2 h-2 bg-rose-300 rounded-full mr-2 animate-pulse"></div>
                 Notificações do Sistema
               </h3>
             </div>

@@ -388,7 +388,7 @@ const MapComponent = ({ className }: OptimizedMapProps) => {
       {/* Cabeçalho do painel */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0 flex-shrink-0">
         <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 bg-gradient-to-r from-green-500 to-blue-600 rounded-full animate-pulse"></div>
+          <div className="w-3 h-3 bg-gradient-to-r from-emerald-600 to-cyan-800 rounded-full animate-pulse"></div>
           <h3 className="text-lg sm:text-xl font-bold text-gray-900">
             Mapa do Sistema Elétrico
           </h3>

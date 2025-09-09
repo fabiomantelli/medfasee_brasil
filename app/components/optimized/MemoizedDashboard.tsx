@@ -68,7 +68,7 @@ const MemoizedDashboard = ({
       <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 sm:p-4 pb-4 sm:pb-6 flex flex-col" style={{height: 'calc(100% - 4rem)'}}>
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0 flex-shrink-0">
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-gradient-to-r from-orange-500 to-red-600 rounded-full animate-pulse"></div>
+            <div className="w-3 h-3 bg-gradient-to-r from-slate-700 to-slate-900 rounded-full animate-pulse"></div>
             <h3 className="text-lg sm:text-xl font-bold text-gray-900">
               Alertas e Estatísticas
             </h3>
@@ -97,7 +97,7 @@ const MemoizedDashboard = ({
       {/* Cabeçalho do painel */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0 flex-shrink-0">
         <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 bg-gradient-to-r from-orange-500 to-red-600 rounded-full animate-pulse"></div>
+          <div className="w-3 h-3 bg-gradient-to-r from-slate-700 to-slate-900 rounded-full animate-pulse"></div>
           <h3 className="text-lg sm:text-xl font-bold text-gray-900">
             Alertas e Estatísticas
           </h3>

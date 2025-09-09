@@ -134,19 +134,27 @@ const MemoizedNotificationSystem = ({ systemData }: MemoizedNotificationSystemPr
   
   if (!notifications || notifications.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col p-6" style={{height: 'calc(100% - 4rem)'}}>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Sistema de Notificações
-        </h3>
-        <div className="flex-1 flex items-center justify-center">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 sm:p-4 pb-4 sm:pb-6 flex flex-col" style={{height: 'calc(100% - 4rem)'}}>
+        {/* Cabeçalho do painel */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0 flex-shrink-0">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-gradient-to-r from-red-500 to-orange-600 rounded-full animate-pulse"></div>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+              Sistema de Notificações
+            </h3>
+          </div>
+        </div>
+        
+        {/* Área de conteúdo */}
+        <div className="flex-1 relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-2 sm:p-4 border border-gray-200 shadow-inner overflow-hidden flex items-center justify-center">
           <div className="text-center">
             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
             </div>
             <p className="text-gray-600">Sistema operando normalmente</p>
-        <p className="text-sm text-gray-500 mt-1">Nenhum alerta ativo</p>
+            <p className="text-sm text-gray-500 mt-1">Nenhum alerta ativo</p>
           </div>
         </div>
       </div>
@@ -154,37 +162,44 @@ const MemoizedNotificationSystem = ({ systemData }: MemoizedNotificationSystemPr
   }
   
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col p-4 sm:p-6" style={{height: 'calc(100% - 4rem)'}}>
-      <div className="pb-4 border-b border-gray-200">
-         <h3 className="text-lg font-semibold text-gray-900">
-          Sistema de Notificações
-        </h3>
-        <p className="text-sm text-gray-600 mt-1">
+    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 sm:p-4 pb-4 sm:pb-6 flex flex-col" style={{height: 'calc(100% - 4rem)'}}>
+      {/* Cabeçalho do painel */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0 flex-shrink-0">
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 bg-gradient-to-r from-red-500 to-orange-600 rounded-full animate-pulse"></div>
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+            Sistema de Notificações
+          </h3>
+        </div>
+        <div className="text-xs text-gray-500">
           {notifications?.length || 0} alerta{(notifications?.length || 0) !== 1 ? 's' : ''} ativo{(notifications?.length || 0) !== 1 ? 's' : ''}
-        </p>
+        </div>
       </div>
       
-      <div className="divide-y divide-gray-200 flex-1 overflow-y-auto">
-        {(notifications || []).map((notification) => (
-          <div key={notification.id} className="p-4">
-            <div className="flex items-start space-x-3">
-              {getNotificationIcon(notification.type)}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-gray-900">
-                    {notification.title}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {notification.timestamp.toLocaleTimeString()}
+      {/* Área de conteúdo */}
+      <div className="flex-1 relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-2 sm:p-4 border border-gray-200 shadow-inner overflow-hidden">
+        <div className="divide-y divide-gray-200 h-full overflow-y-auto">
+          {(notifications || []).map((notification) => (
+            <div key={notification.id} className="p-4">
+              <div className="flex items-start space-x-3">
+                {getNotificationIcon(notification.type)}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-gray-900">
+                      {notification.title}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {notification.timestamp.toLocaleTimeString()}
+                    </p>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {notification.message}
                   </p>
                 </div>
-                <p className="text-sm text-gray-600 mt-1">
-                  {notification.message}
-                </p>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
