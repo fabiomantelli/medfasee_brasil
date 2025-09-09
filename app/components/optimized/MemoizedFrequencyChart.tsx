@@ -21,9 +21,8 @@ const PMU_COLORS = [
 
 // Component without React.memo for better performance with constantly changing data
 const FrequencyChartComponent = ({}: MemoizedFrequencyChartProps) => {
-  const { measurements, isRealDataConnected } = usePMUData();
+  const { measurements, isRealDataConnected, allMeasurements } = usePMUData();
   const [isClient, setIsClient] = useState(false);
-  const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [availablePMUs, setAvailablePMUs] = useState<{ id: string; name: string; frequency: number }[]>([]);
   const [selectedPMUs, setSelectedPMUs] = React.useState<string[]>([]);
   const [pmuData, setPmuData] = useState<Record<string, PMUDataPoint[]>>({});
@@ -37,17 +36,24 @@ const FrequencyChartComponent = ({}: MemoizedFrequencyChartProps) => {
     setIsClient(true);
   }, []);
   
-  useEffect(() => {
-    if (!isClient) return;
+  // Calcular timestamp mais recente das PMUs (igual ao Dashboard Principal)
+  const getLatestPMUTimestamp = React.useMemo(() => {
+    if (!allMeasurements || allMeasurements.length === 0) {
+      return 'Nunca';
+    }
     
-    setCurrentTime(new Date());
+    // Pegar o timestamp mais recente das PMUs
+    const latestTimestamp = allMeasurements
+      .map(m => m.timestamp)
+      .filter(t => t && t !== '2024-01-01T00:00:00.000Z')
+      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
     
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000); // Atualizar a cada minuto
+    if (latestTimestamp) {
+      return new Date(latestTimestamp).toLocaleTimeString('pt-BR');
+    }
     
-    return () => clearInterval(interval);
-  }, [isClient]);
+    return 'Nunca';
+  }, [allMeasurements]);
 
   // Update dimensions on resize
   React.useEffect(() => {
@@ -315,7 +321,7 @@ const FrequencyChartComponent = ({}: MemoizedFrequencyChartProps) => {
             </p>
           </div>
           <p className="text-xs text-gray-500">
-            Últimas {maxPoints} medições • Atualizado: {isClient ? currentTime.toLocaleTimeString('pt-BR') : '--:--:--'}
+            Últimas {maxPoints} medições • Atualizado: {isClient ? getLatestPMUTimestamp : '--:--:--'}
           </p>
         </div>
         
