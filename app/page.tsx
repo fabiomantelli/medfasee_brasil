@@ -80,21 +80,21 @@ export default function Home() {
       { i: 'map', x: 6, y: 0, w: 6, h: 10, minW: 4, minH: 8 },
       { i: 'angular', x: 0, y: 10, w: 6, h: 10, minW: 4, minH: 8 },
       { i: 'frequency', x: 6, y: 10, w: 6, h: 10, minW: 4, minH: 8 },
-      { i: 'notifications', x: 0, y: 20, w: 12, h: 8, minW: 6, minH: 6 }
+      { i: 'notifications', x: 0, y: 20, w: 12, h: 2, minW: 6, minH: 2 }
     ],
     md: [
       { i: 'dashboard', x: 0, y: 0, w: 6, h: 10, minW: 4, minH: 8 },
       { i: 'map', x: 6, y: 0, w: 6, h: 10, minW: 4, minH: 8 },
       { i: 'angular', x: 0, y: 10, w: 6, h: 10, minW: 4, minH: 8 },
       { i: 'frequency', x: 6, y: 10, w: 6, h: 10, minW: 4, minH: 8 },
-      { i: 'notifications', x: 0, y: 20, w: 12, h: 8, minW: 6, minH: 6 }
+      { i: 'notifications', x: 0, y: 20, w: 12, h: 2, minW: 6, minH: 2 }
     ],
     sm: [
       { i: 'dashboard', x: 0, y: 0, w: 6, h: 10, minW: 6, minH: 8 },
       { i: 'map', x: 0, y: 10, w: 6, h: 10, minW: 6, minH: 8 },
       { i: 'angular', x: 0, y: 20, w: 6, h: 10, minW: 6, minH: 8 },
       { i: 'frequency', x: 0, y: 30, w: 6, h: 10, minW: 6, minH: 8 },
-      { i: 'notifications', x: 0, y: 40, w: 6, h: 8, minW: 6, minH: 6 }
+      { i: 'notifications', x: 0, y: 40, w: 6, h: 2, minW: 6, minH: 2 }
     ]
   });
 
@@ -251,7 +251,7 @@ export default function Home() {
         <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Dashboard Moderno Next.js 15</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Dashboard Projeto MedFasee BT</h2>
               <p className="text-sm text-gray-600 dark:text-gray-300">
                 Zustand Store • Custom Hooks • {stats.activePMUs}/{stats.totalPMUs} PMUs ativas
               </p>

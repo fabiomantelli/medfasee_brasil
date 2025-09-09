@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useLayoutEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { PMUMeasurement, VoltageData } from '../../services/pmuService';
 import { usePMUData } from '../../hooks/useDashboard';
@@ -44,6 +44,10 @@ const AngularDifferenceChartComponent = ({ systemData }: MemoizedAngularDifferen
   const [relativeAngles, setRelativeAngles] = useState<{ [key: string]: number }>({});
   const [referencePMU, setReferencePMU] = useState<string>('');
   const [availablePMUs, setAvailablePMUs] = useState<PMUMeasurement[]>([]);
+  const [revision, setRevision] = useState(0);
+  
+  // Ref para o container do gráfico
+  const plotContainerRef = useRef<HTMLDivElement>(null);
 
   // Inicializar PMUs selecionadas (primeiras 5 por padrão)
   useEffect(() => {
@@ -52,6 +56,25 @@ const AngularDifferenceChartComponent = ({ systemData }: MemoizedAngularDifferen
       setSelectedPMUs(new Set(initialPMUs));
     }
   }, [availablePMUs]);
+
+  // Detectar mudanças no tamanho do container para redimensionar o gráfico
+  useLayoutEffect(() => {
+    const handleResize = () => {
+      setRevision(prev => prev + 1);
+    };
+
+    const resizeObserver = new ResizeObserver(handleResize);
+    if (plotContainerRef.current) {
+      resizeObserver.observe(plotContainerRef.current);
+    }
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   // Processar dados de tensão quando as medições mudarem - otimizado
   useEffect(() => {
@@ -244,14 +267,18 @@ const AngularDifferenceChartComponent = ({ systemData }: MemoizedAngularDifferen
     plot_bgcolor: 'rgba(0,0,0,0)',
     font: { color: '#666666' },
     showlegend: false,
-    margin: { t: 20, b: 20, l: 20, r: 20 }
+    margin: { t: 20, b: 20, l: 20, r: 20 },
+    autosize: true,
+    datarevision: revision
   };
 
   const config = {
     displayModeBar: true,
     displaylogo: false,
     modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
-    responsive: true
+    responsive: true,
+    useResizeHandler: true,
+    autosizable: true
   };
 
   // Estado de carregamento - diferencia webservice desconectado vs aguardando PMUs
@@ -442,7 +469,7 @@ const AngularDifferenceChartComponent = ({ systemData }: MemoizedAngularDifferen
       </div>
 
       {/* Área do gráfico */}
-      <div className="flex-1 relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-2 sm:p-4 border border-gray-200 shadow-inner overflow-hidden">
+      <div ref={plotContainerRef} className="flex-1 relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-2 sm:p-4 border border-gray-200 shadow-inner overflow-hidden">
         <div className="w-full h-full">
           <Plot
             data={plotData}

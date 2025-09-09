@@ -31,21 +31,21 @@ const getNavigationItems = (currentPath = '/'): NavItem[] => [
     id: 'analytics',
     label: 'Análises',
     icon: <BarChart3 className="h-5 w-5" />,
-    href: '/analytics',
+    href: '/',
     active: currentPath === '/analytics'
   },
   {
     id: 'map',
     label: 'Mapa',
     icon: <Map className="h-5 w-5" />,
-    href: '/map',
+    href: '/',
     active: currentPath === '/map'
   },
   {
     id: 'notifications',
     label: 'Notificações',
     icon: <Bell className="h-5 w-5" />,
-    href: '/notifications',
+    href: '/',
     active: currentPath === '/notifications',
     badge: 3 // This would come from server-side data
   },
@@ -53,7 +53,7 @@ const getNavigationItems = (currentPath = '/'): NavItem[] => [
     id: 'settings',
     label: 'Configurações',
     icon: <Settings className="h-5 w-5" />,
-    href: '/settings',
+    href: '/',
     active: currentPath === '/settings'
   }
 ];

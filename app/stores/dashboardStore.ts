@@ -105,7 +105,7 @@ export const useDashboardStore = create<DashboardState>()(devtools(
         }
         
         state.stats = {
-          totalPMUs: measurements.length,
+          totalPMUs: 28, // Total de PMUs definidas no XML
           activePMUs,
           averageFrequency: Number(avgFreq.toFixed(3)),
           lastUpdate: lastUpdateTime
