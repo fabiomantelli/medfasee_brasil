@@ -224,12 +224,10 @@ const AngularDifferenceChartComponent = ({ systemData }: MemoizedAngularDifferen
             width: 3
           },
           showlegend: false,
-          hovertemplate: `
-            <b>${data.name}</b><br>
-            Magnitude: ${data.r.toFixed(3)} pu<br>
-            Ângulo Relativo: ${relativeAngle.toFixed(1)}°<br>
-            <extra></extra>
-          `,
+          hovertemplate: '<b>%{fullData.name}</b><br>' +
+                        'Magnitude: %{r:.3f} pu<br>' +
+                        'Ângulo: %{theta:.2f}°<br>' +
+                        '<extra></extra>',
           name: data.name
         }
       ];
