@@ -1,6 +1,7 @@
 'use client';
 
 import React, { Suspense } from 'react';
+import Image from 'next/image';
 import { Loader2, Zap, Activity } from 'lucide-react';
 import { DashboardSkeleton, ChartSkeleton, MapSkeleton, TableSkeleton } from './Skeleton';
 import { cn } from '../../lib/utils';
@@ -210,11 +211,12 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
         </div>
       )}
       
-      <img
+      <Image
         src={error ? placeholder : src}
         alt={alt}
+        fill
         className={cn(
-          'transition-opacity duration-300',
+          'transition-opacity duration-300 object-cover',
           loading ? 'opacity-0' : 'opacity-100',
           className
         )}

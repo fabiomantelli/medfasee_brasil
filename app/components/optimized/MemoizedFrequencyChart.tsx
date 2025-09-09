@@ -21,9 +21,8 @@ interface SystemData {
   };
 }
 
-interface MemoizedFrequencyChartProps {
-  systemData: SystemData;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface MemoizedFrequencyChartProps {}
 
 const PMU_COLORS = [
   '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
@@ -33,7 +32,7 @@ const PMU_COLORS = [
 ];
 
 // Component without React.memo for better performance with constantly changing data
-const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) => {
+const FrequencyChartComponent = ({}: MemoizedFrequencyChartProps) => {
   const { measurements, isRealDataConnected } = usePMUData();
   const [isClient, setIsClient] = useState(false);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -196,34 +195,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
     });
   };
 
-  // Process data for chart rendering
-  const chartData = React.useMemo(() => {
-    if (!pmuData || Object.keys(pmuData).length === 0) {
-      return [];
-    }
-
-    const allTimestamps = new Set<number>();
-    Object.values(pmuData).forEach(pmuPoints => {
-      pmuPoints.forEach(point => allTimestamps.add(point.timestamp.getTime()));
-    });
-
-    const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
-    
-    return sortedTimestamps.map(timestamp => {
-      const dataPoint: Record<string, number | Date> = { timestamp: new Date(timestamp) };
-      
-      selectedPMUs.forEach(pmuId => {
-        if (pmuData[pmuId]) {
-          const point = pmuData[pmuId].find(p => p.timestamp.getTime() === timestamp);
-          if (point) {
-            dataPoint[pmuId] = point.frequency;
-          }
-        }
-      });
-      
-      return dataPoint;
-    });
-  }, [pmuData, selectedPMUs]);
+  // Data processing is handled directly in selectedData below
 
   const selectedData = selectedPMUs
     .map(pmuId => ({ pmuId, data: pmuData[pmuId] || [] }))

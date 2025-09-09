@@ -79,10 +79,8 @@ function getInitialMetrics(timestamp?: string) {
 // Main Client Component para evitar problemas de hidratação
 export default function DashboardMetrics() {
   const [metrics, setMetrics] = React.useState(() => getInitialMetrics('2024-01-01T00:00:00.000Z'));
-  const [isClient, setIsClient] = React.useState(false);
 
   React.useEffect(() => {
-    setIsClient(true);
     if (typeof window !== 'undefined') {
       setMetrics(getInitialMetrics());
       

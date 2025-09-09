@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { Home, BarChart3, Map, Settings, Bell, User } from 'lucide-react';
 
 // Server Component for navigation - renders on server for better performance
@@ -99,10 +100,12 @@ const UserInfo: React.FC = () => {
     <div className="flex items-center space-x-3 p-4 border-t border-gray-200">
       <div className="flex-shrink-0">
         {user.avatar ? (
-          <img
+          <Image
             className="h-8 w-8 rounded-full"
             src={user.avatar}
             alt={user.name}
+            width={32}
+            height={32}
           />
         ) : (
           <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">

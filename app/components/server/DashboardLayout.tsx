@@ -2,8 +2,6 @@
 
 import React from 'react';
 import Navigation from './Navigation';
-import DashboardMetrics from './DashboardMetrics';
-import { SuspenseWrapper } from '../ui/Loading';
 import MobileMenu from '../ui/MobileMenu';
 
 // Server Component for optimized dashboard layout
@@ -17,6 +15,7 @@ interface DashboardLayoutProps {
 }
 
 // Server-side layout configuration
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getLayoutConfig = () => ({
   navigation: {
     width: '240px',
@@ -105,10 +104,8 @@ const DashboardHeader: React.FC<{ currentPath?: string }> = ({ currentPath }) =>
 export default function DashboardLayout({
   children,
   currentPath = '/',
-  showMetrics = true,
   showNavigation = true
 }: DashboardLayoutProps) {
-  const config = getLayoutConfig();
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -169,9 +166,7 @@ export default function DashboardLayout({
 
 // Responsive layout for mobile
 export const MobileDashboardLayout: React.FC<DashboardLayoutProps> = ({
-  children,
-  currentPath,
-  showMetrics = true
+  children
 }) => {
   return (
     <div className="min-h-screen bg-gray-50">
