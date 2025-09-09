@@ -333,20 +333,20 @@ const MapComponent = ({ className }: OptimizedMapProps) => {
               }}
             >
               <Popup>
-                <div className="p-2 min-w-[200px]">
-                  <h4 className="font-bold text-gray-800 mb-2">{pmu.pmuName}</h4>
-                  <div className="space-y-1 text-sm">
-                    <p><span className="font-medium">Frequência:</span> <span className={`font-bold ${
-                      Math.abs(pmu.frequency - 60) <= 0.1 ? 'text-green-600' :
-                      Math.abs(pmu.frequency - 60) <= 0.5 ? 'text-yellow-600' : 'text-red-600'
-                    }`}>{pmu.frequency.toFixed(3)} Hz</span></p>
-                    <p><span className="font-medium">ROCOF:</span> {pmu.rocof?.toFixed(3) || 'N/A'} Hz/s</p>
-                    <p><span className="font-medium">Status:</span> <span className="text-green-600 font-medium">{getStatusText(pmu.frequency)}</span></p>
-                    <p><span className="font-medium">Região:</span> {pmu.region || pmu.area}</p>
-                    <p><span className="font-medium">Estado:</span> {pmu.state}</p>
-                    <p className="text-xs text-gray-500 mt-2">Última atualização: {new Date(pmu.timestamp).toLocaleTimeString('pt-BR')}</p>
+                <div className="pt-1 min-w-[200px]">
+                    <h4 className="font-bold text-gray-800">{pmu.pmuName}</h4>
+                    <div className="text-sm" style={{lineHeight: '1.5'}}>
+                      <div><span className="font-medium">Frequência:</span> <span className={`font-bold ${
+                        Math.abs(pmu.frequency - 60) <= 0.1 ? 'text-green-600' :
+                        Math.abs(pmu.frequency - 60) <= 0.5 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>{pmu.frequency.toFixed(3)} Hz</span></div>
+                      <div><span className="font-medium">ROCOF:</span> {pmu.rocof?.toFixed(3) || 'N/A'} Hz/s</div>
+                      <div><span className="font-medium">Status:</span> <span className="text-green-600 font-medium">{getStatusText(pmu.frequency)}</span></div>
+                      <div><span className="font-medium">Região:</span> {pmu.region || pmu.area}</div>
+                      <div><span className="font-medium">Estado:</span> {pmu.state}</div>
+                    </div>
+                    <p className="text-xs text-gray-500">Última atualização: {new Date(pmu.timestamp).toLocaleTimeString('pt-BR')}</p>
                   </div>
-                </div>
               </Popup>
             </Marker>
           ))}
@@ -365,15 +365,15 @@ const MapComponent = ({ className }: OptimizedMapProps) => {
               }}
             >
               <Popup>
-                <div className="p-2 min-w-[200px]">
-                  <h4 className="font-bold text-gray-800 mb-2">{pmu.pmuName}</h4>
-                  <div className="space-y-1 text-sm">
-                    <p><span className="font-medium">Status:</span> <span className="text-red-600 font-medium">Desconectada</span></p>
-                    <p><span className="font-medium">Região:</span> {pmu.area}</p>
-                    <p><span className="font-medium">Estado:</span> {pmu.state}</p>
-                    <p className="text-xs text-gray-500 mt-2">Sem dados disponíveis</p>
+                <div className="p-1.5 min-w-[200px]">
+                    <h4 className="font-bold text-gray-800 mb-1">{pmu.pmuName}</h4>
+                    <div className="text-sm" style={{lineHeight: '1.1'}}>
+                      <div style={{margin: '0', padding: '0'}}><span className="font-medium">Status:</span> <span className="text-red-600 font-medium">Desconectada</span></div>
+                      <div style={{margin: '0', padding: '0'}}><span className="font-medium">Região:</span> {pmu.area}</div>
+                      <div style={{margin: '0', padding: '0'}}><span className="font-medium">Estado:</span> {pmu.state}</div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Sem dados disponíveis</p>
                   </div>
-                </div>
               </Popup>
             </CircleMarker>
           ))}

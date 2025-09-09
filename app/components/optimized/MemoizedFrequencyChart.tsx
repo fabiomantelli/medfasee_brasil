@@ -35,11 +35,15 @@ const PMU_COLORS = [
 // Component without React.memo for better performance with constantly changing data
 const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) => {
   const { measurements, isRealDataConnected } = usePMUData();
-  const [pmuData, setPmuData] = useState<Record<string, PMUDataPoint[]>>({});
-  const [selectedPMUs, setSelectedPMUs] = React.useState<string[]>([]);
-  const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [isClient, setIsClient] = useState(false);
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [availablePMUs, setAvailablePMUs] = useState<any[]>([]);
+  const [selectedPMUs, setSelectedPMUs] = React.useState<string[]>([]);
+  const [pmuData, setPmuData] = useState<Record<string, PMUDataPoint[]>>({});
+  
+  // Responsive dimensions based on container - moved to top
+  const [dimensions, setDimensions] = React.useState({ width: 800, height: 400 });
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   // Initialize client-side rendering
   useEffect(() => {
@@ -57,6 +61,24 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
     
     return () => clearInterval(interval);
   }, [isClient]);
+
+  // Update dimensions on resize
+  React.useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setDimensions({
+          width: Math.max(400, rect.width - 16),
+          height: Math.max(300, rect.height - 16)
+        });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
 
   const maxPoints = 30; // Máximo de 30 pontos na tela
   const updateInterval = 5000; // 5 segundos entre atualizações
@@ -286,9 +308,8 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
     );
   }
 
-  const width = 800;
-  const height = 400;
-  const padding = 60;
+  const { width, height } = dimensions;
+  const padding = Math.min(60, width * 0.08); // Responsive padding
 
   // Calculate frequency range
   const allFrequencies = selectedData.flatMap(item => 
@@ -375,7 +396,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
         </div>
       </div>
       
-      <div className="flex-1 relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-1 border border-gray-200 shadow-inner overflow-hidden">
+      <div ref={containerRef} className="flex-1 relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-1 border border-gray-200 shadow-inner overflow-hidden">
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
           {/* Grid lines and gradients */}
           <defs>
@@ -532,7 +553,8 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
                       x={padding - 10} 
                       y={y + 4} 
                       textAnchor="end" 
-                      className="fill-slate-600 text-xs font-medium"
+                      className="fill-slate-600 font-medium"
+                      fontSize={Math.max(10, width * 0.015)}
                     >
                       {freq.toFixed(2)}
                     </text>
@@ -541,16 +563,7 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
               });
             })()}
             
-            {/* Y-axis label */}
-            <text 
-              x={15} 
-              y={height / 2} 
-              textAnchor="middle" 
-              className="fill-slate-700 text-sm font-medium" 
-              transform={`rotate(-90, 15, ${height / 2})`}
-            >
-              Frequência (Hz)
-            </text>
+            {/* Y-axis label removed */}
           </g>
           
           {/* X-axis */}
@@ -599,24 +612,17 @@ const FrequencyChartComponent = ({ systemData }: MemoizedFrequencyChartProps) =>
                       x={x} 
                       y={height - padding + 18} 
                       textAnchor="middle" 
-                      className="fill-slate-600 text-xs"
+                      className="fill-slate-600"
+                      fontSize={Math.max(9, width * 0.012)}
                     >
-                      {timestamp ? `${timestamp.getHours().toString().padStart(2, '0')}:${timestamp.getMinutes().toString().padStart(2, '0')}:${timestamp.getSeconds().toString().padStart(2, '0')}.${timestamp.getMilliseconds().toString().padStart(3, '0')}` : '--:--:--.---'}
+                      {timestamp ? `${timestamp.getHours().toString().padStart(2, '0')}:${timestamp.getMinutes().toString().padStart(2, '0')}:${timestamp.getSeconds().toString().padStart(2, '0')}` : '--:--:--'}
                     </text>
                   </g>
                 );
               });
             })()}
             
-            {/* X-axis label */}
-            <text 
-              x={width / 2} 
-              y={height - 10} 
-              textAnchor="middle" 
-              className="fill-slate-700 text-sm font-medium"
-            >
-              Tempo
-            </text>
+            {/* X-axis label removed */}
           </g>
         </svg>
       </div>

@@ -80,21 +80,21 @@ export default function Home() {
       { i: 'map', x: 6, y: 0, w: 6, h: 10, minW: 4, minH: 8 },
       { i: 'angular', x: 0, y: 10, w: 6, h: 10, minW: 4, minH: 8 },
       { i: 'frequency', x: 6, y: 10, w: 6, h: 10, minW: 4, minH: 8 },
-      { i: 'notifications', x: 0, y: 20, w: 12, h: 6, minW: 6, minH: 2 }
+      { i: 'notifications', x: 0, y: 20, w: 12, h: 6, minW: 4, minH: 2 }
     ],
     md: [
       { i: 'dashboard', x: 0, y: 0, w: 6, h: 10, minW: 4, minH: 8 },
       { i: 'map', x: 6, y: 0, w: 6, h: 10, minW: 4, minH: 8 },
       { i: 'angular', x: 0, y: 10, w: 6, h: 10, minW: 4, minH: 8 },
       { i: 'frequency', x: 6, y: 10, w: 6, h: 10, minW: 4, minH: 8 },
-      { i: 'notifications', x: 0, y: 20, w: 12, h: 6, minW: 6, minH: 4 }
+      { i: 'notifications', x: 0, y: 20, w: 12, h: 6, minW: 4, minH: 4 }
     ],
     sm: [
-      { i: 'dashboard', x: 0, y: 0, w: 6, h: 8, minW: 6, minH: 6 },
-      { i: 'map', x: 0, y: 8, w: 6, h: 10, minW: 6, minH: 6 },
-      { i: 'frequency', x: 0, y: 16, w: 12, h: 8, minW: 6, minH: 6 },
-      { i: 'angular', x: 0, y: 24, w: 6, h: 12, minW: 6, minH: 6 },
-      { i: 'notifications', x: 0, y: 32, w: 6, h: 6, minW: 6, minH: 4 }
+      { i: 'dashboard', x: 0, y: 0, w: 6, h: 8, minW: 4, minH: 6 },
+      { i: 'map', x: 0, y: 8, w: 6, h: 10, minW: 4, minH: 6 },
+      { i: 'frequency', x: 0, y: 16, w: 12, h: 8, minW: 4, minH: 6 },
+      { i: 'angular', x: 0, y: 24, w: 6, h: 12, minW: 4, minH: 6 },
+      { i: 'notifications', x: 0, y: 32, w: 6, h: 6, minW: 4, minH: 4 }
     ],
     xs: [
       { i: 'dashboard', x: 0, y: 0, w: 4, h: 8, minW: 4, minH: 4 },
