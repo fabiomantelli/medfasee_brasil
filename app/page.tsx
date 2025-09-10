@@ -51,15 +51,18 @@ import { useDashboardInitialization, usePMUData, useLoadingState } from './hooks
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-// Componente para renderizar timestamp apenas no cliente
+// Componente para renderizar timestamp das PMUs apenas no cliente
 const ClientTimestamp = () => {
-  const [timestamp, setTimestamp] = useState('');
+  const { stats } = usePMUData();
+  const [isClient, setIsClient] = useState(false);
   
   useEffect(() => {
-    setTimestamp(new Date().toLocaleString('pt-BR'));
+    setIsClient(true);
   }, []);
   
-  return <span>{timestamp}</span>;
+  if (!isClient) return <span>Carregando...</span>;
+  
+  return <span>{stats.lastUpdate || 'Nunca'}</span>;
 };
 
 type LayoutItem = {

@@ -504,15 +504,15 @@ export class PMUService {
         }
         
         // Usar APENAS dados reais do webservice - sem valores padrão
-        // Normalizar timestamp para o momento da consulta (evita desalinhamento no gráfico)
-        const queryTimestamp = new Date(Date.now() - 5000).toISOString(); // Mesmo timestamp da consulta
+        // Usar o timestamp real dos dados do webservice (UTC -5 segundos)
+        const realTimestamp = freqData.Time; // Timestamp real do webservice
         
         const measurement: PMUMeasurement = {
           pmuId: pmu.id,
           pmuName: pmu.fullName,
           frequency: freqData.Value, // APENAS dados reais
           dfreq: dfreqData?.Value || 0.0,
-          timestamp: queryTimestamp, // Timestamp normalizado para todas as PMUs
+          timestamp: realTimestamp, // Timestamp real do webservice (UTC -5s)
           quality: freqData.Quality,
           lat: pmu.lat,
           lon: pmu.lon,

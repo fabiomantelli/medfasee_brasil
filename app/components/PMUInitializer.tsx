@@ -5,7 +5,7 @@ import { useDashboardStore } from '../stores/dashboardStore';
 
 function PMUInitializerCore() {
   console.log('🚀 PMUInitializer - Componente inicializado');
-  const { pmuService, setPmuService, setIsRealDataConnected, setPmuMeasurements, updateLastUpdate } = useDashboardStore();
+  const { pmuService, setPmuService, setIsRealDataConnected, setPmuMeasurements } = useDashboardStore();
   const [initialized, setInitialized] = useState(false);
   
   console.log('🚀 PMUInitializer - pmuService exists:', !!pmuService, 'initialized:', initialized);
@@ -36,7 +36,6 @@ function PMUInitializerCore() {
           service.subscribe((measurements) => {
             console.log('📊 PMUInitializer - Dados recebidos:', measurements.length, 'PMUs');
             setPmuMeasurements(measurements);
-            updateLastUpdate();
           });
           
           setPmuService(service);
@@ -95,7 +94,6 @@ function PMUInitializerCore() {
         service.subscribe((measurements) => {
           console.log('📊 PMUInitializer - Dados recebidos:', measurements.length, 'PMUs');
           setPmuMeasurements(measurements);
-          updateLastUpdate();
         });
         
         setPmuService(service);

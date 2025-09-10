@@ -312,7 +312,11 @@ const FrequencyChartComponent = ({}: MemoizedFrequencyChartProps) => {
   const getPMUName = (pmuId: string) => {
     const pmu = availablePMUs.find(p => p.pmuId === pmuId);
     if (pmu) {
-      return pmu.pmuName || `${pmu.station} (${pmu.state})` || `PMU ${pmu.pmuId}`;
+      // Para PMUs com nomes curtos, usar formato mais descritivo
+      if (pmu.pmuName && pmu.pmuName.length <= 4) {
+        return `${pmu.pmuName}_${pmu.station}_${pmu.state}`;
+      }
+      return pmu.pmuName || `${pmu.pmuId}`;
     }
     return pmuId;
   };
@@ -338,7 +342,7 @@ const FrequencyChartComponent = ({}: MemoizedFrequencyChartProps) => {
           </p>
         </div>
         
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-2 sm:p-3 w-full sm:w-[26rem] border border-gray-200 shadow-inner">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-2 sm:p-3 w-full sm:w-[27.3rem] border border-gray-200 shadow-inner">
           <h4 className="text-sm font-medium text-gray-700 mb-2">
             Selecionar PMUs para Visualização
           </h4>
@@ -365,7 +369,7 @@ const FrequencyChartComponent = ({}: MemoizedFrequencyChartProps) => {
                       }`}
                       style={!isSelected ? { backgroundColor: color } : undefined}
                     ></div>
-                    <span>{getPMUName(pmu.pmuId)}</span>
+                    <span>{pmu.pmuName || `${pmu.pmuId}`}</span>
                   </div>
                 </button>
               );

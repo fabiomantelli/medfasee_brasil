@@ -463,7 +463,7 @@ const PlotlyAngularDifferenceChart: React.FC<PlotlyAngularDifferenceChartProps> 
           </p>
         </div>
         
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-2 sm:p-3 w-full sm:w-[26rem] border border-gray-200 shadow-inner">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-2 sm:p-3 w-full sm:w-[27.3rem] border border-gray-200 shadow-inner">
           <h4 className="text-sm font-medium text-gray-700 mb-2">
             Selecionar PMUs para Visualização
           </h4>
@@ -490,7 +490,7 @@ const PlotlyAngularDifferenceChart: React.FC<PlotlyAngularDifferenceChartProps> 
                       }`}
                       style={!isSelected ? { backgroundColor: color } : undefined}
                     ></div>
-                    <span>{pmu.name || `PMU ${pmu.pmuId}`}</span>
+                    <span>{pmu.name || `${pmu.pmuId}`}</span>
                   </div>
                 </button>
               );

@@ -40,7 +40,6 @@ interface DashboardState {
   setError: (error: string | null) => void;
   incrementRetryCount: () => void;
   resetRetryCount: () => void;
-  updateLastUpdate: () => void;
 }
 
 // Seletores otimizados para evitar re-renders desnecessários
@@ -84,30 +83,33 @@ export const useDashboardStore = create<DashboardState>()(devtools(
       setPmuMeasurements: (measurements) => set((state) => {
         state.pmuMeasurements = measurements;
         
-        // Atualiza stats automaticamente
-        const activePMUs = measurements.filter(m => m.status === 'active').length;
-        const avgFreq = measurements.length > 0 
-          ? measurements.reduce((sum, m) => sum + (m.frequency || 0), 0) / measurements.length 
+        // Calcular estatísticas
+        const totalPMUs = measurements.length;
+        const activePMUs = measurements.filter(pmu => pmu.status === 'active').length;
+        const validFrequencies = measurements
+          .filter(pmu => pmu.status === 'active' && pmu.frequency > 0)
+          .map(pmu => pmu.frequency);
+        const averageFrequency = validFrequencies.length > 0 
+          ? validFrequencies.reduce((sum, freq) => sum + freq, 0) / validFrequencies.length 
           : 0;
         
-        // Usar timestamp das PMUs do webservice se disponível
+        // Encontrar o timestamp mais recente das PMUs
+        const validTimestamps = measurements
+          .map(pmu => pmu.timestamp)
+          .filter(timestamp => timestamp && timestamp !== '2024-01-01T00:00:00.000Z');
+        
         let lastUpdateTime = 'Nunca';
-        if (measurements.length > 0) {
-          // Pegar o timestamp mais recente das PMUs
-          const latestTimestamp = measurements
-            .map(m => m.timestamp)
-            .filter(t => t && t !== '2024-01-01T00:00:00.000Z')
-            .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
-          
-          if (latestTimestamp) {
-            lastUpdateTime = new Date(latestTimestamp).toLocaleTimeString('pt-BR');
-          }
+        if (validTimestamps.length > 0) {
+          const latestTimestamp = validTimestamps.reduce((latest, current) => 
+            new Date(current) > new Date(latest) ? current : latest
+          );
+          lastUpdateTime = new Date(latestTimestamp).toLocaleTimeString('pt-BR');
         }
         
         state.stats = {
-          totalPMUs: 28, // Total de PMUs definidas no XML
+          totalPMUs,
           activePMUs,
-          averageFrequency: Number(avgFreq.toFixed(3)),
+          averageFrequency,
           lastUpdate: lastUpdateTime
         };
         
@@ -132,10 +134,6 @@ export const useDashboardStore = create<DashboardState>()(devtools(
       
       resetRetryCount: () => set((state) => {
         state.retryCount = 0;
-      }),
-      
-      updateLastUpdate: () => set((state) => {
-        state.lastUpdate = new Date().toLocaleTimeString('pt-BR');
       })
     }))
   ),

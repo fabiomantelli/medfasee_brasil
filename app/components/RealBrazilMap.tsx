@@ -260,7 +260,7 @@ const MapComponent = ({}: OptimizedMapProps) => {
       return (
         <div className="w-full h-full relative bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl border border-slate-300 overflow-hidden flex items-center justify-center">
           <div className="text-center p-8">
-            <div className="text-6xl mb-4 animate-spin">🗺️</div>
+            <div className="text-5xl mb-4 animate-spin">🗺️</div>
             <h3 className="text-lg font-semibold text-gray-700 mb-2">Carregando mapa...</h3>
             <p className="text-sm text-gray-500">
               Preparando visualização do sistema elétrico
@@ -307,7 +307,7 @@ const MapComponent = ({}: OptimizedMapProps) => {
                       <div><span className="font-medium">Região:</span> {pmu.region || pmu.area}</div>
                       <div><span className="font-medium">Estado:</span> {pmu.state}</div>
                     </div>
-                    <p className="text-xs text-gray-500">Última atualização: {new Date(pmu.timestamp).toLocaleTimeString('pt-BR')}</p>
+                    <p className="text-xs text-gray-500">Última atualização: {pmu.timestamp && pmu.timestamp !== '2024-01-01T00:00:00.000Z' ? new Date(pmu.timestamp).toLocaleTimeString('pt-BR') : 'N/A'}</p>
                   </div>
               </Popup>
             </Marker>
