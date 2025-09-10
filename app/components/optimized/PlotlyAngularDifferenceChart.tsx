@@ -202,24 +202,45 @@ const PlotlyAngularDifferenceChart: React.FC<PlotlyAngularDifferenceChartProps> 
       const relativeAngle = relativeAngles[data.pmuId] || 0;
       const color = getPMUColor(data.pmuId);
       
-      // Normalizar magnitude (assumindo base de 1.0 pu)
-      const magnitudePU = data.magnitude / 1.0;
+      // Usar magnitude já em pu calculada anteriormente
+      const magnitudePU = data.r; // Já calculado em pu no polarData
+      
+      // Criar múltiplos pontos ao longo da linha para melhor hover
+      const numPoints = 20;
+      const rValues = [];
+      const thetaValues = [];
+      
+      for (let i = 0; i <= numPoints; i++) {
+        rValues.push((i / numPoints) * magnitudePU);
+        thetaValues.push(relativeAngle);
+      }
       
       return {
         type: 'scatterpolar' as const,
-        mode: 'lines' as const,
-        r: [0, magnitudePU], // Do centro (0) até a magnitude normalizada
-        theta: [relativeAngle, relativeAngle], // Mesmo ângulo para linha reta
+        mode: 'lines+markers' as const,
+        r: rValues,
+        theta: thetaValues,
         line: {
           color: color,
-          width: 2 // Linha mais fina para visualização do vetor
+          width: 2
+        },
+        marker: {
+          color: color,
+          size: 2,
+          opacity: 0.1 // Marcadores quase invisíveis
         },
         name: data.name,
-        hovertemplate: `<b>${data.name}</b><br>` +
-                      `Magnitude: ${data.magnitude.toFixed(3)} V<br>` +
-                      `Ângulo: ${relativeAngle.toFixed(1)}°<br>` +
-                      `Magnitude (pu): ${magnitudePU.toFixed(3)}<br>` +
-                      `<extra></extra>`
+        hoverlabel: {
+            bgcolor: color,
+            bordercolor: 'white',
+            font: { color: 'white', size: 12 }
+          },
+          hovertemplate: `<b>${data.name}</b><br>` +
+                        `Magnitude: ${data.magnitude.toFixed(0)} V<br>` +
+                        `Ângulo: ${relativeAngle.toFixed(1)}°<br>` +
+                        `Magnitude (pu): ${magnitudePU.toFixed(4)} pu<br>` +
+                        `<extra></extra>`,
+        showlegend: false
       };
     });
     
@@ -329,7 +350,10 @@ const PlotlyAngularDifferenceChart: React.FC<PlotlyAngularDifferenceChartProps> 
     paper_bgcolor: 'rgba(0,0,0,0)',
     plot_bgcolor: 'rgba(0,0,0,0)',
     annotations: plotlyAnnotations || [],
-    autosize: true
+    autosize: true,
+    hovermode: 'closest' as const,
+
+    hoverdistance: 50
   };
   
   // Show loading state only when client is not ready

@@ -4,30 +4,76 @@ import React, { useEffect, useState } from 'react';
 import { useDashboardStore } from '../stores/dashboardStore';
 
 function PMUInitializerCore() {
-  console.log('🚀🚀🚀 PMUInitializer - EXECUTANDO AGORA - TESTE FORÇADO 2025 🚀🚀🚀');
+  console.log('🚀 PMUInitializer - Componente inicializado');
   const { pmuService, setPmuService, setIsRealDataConnected, setPmuMeasurements, updateLastUpdate } = useDashboardStore();
   const [initialized, setInitialized] = useState(false);
   
-  console.log('🚀 PMUInitializer - Store accessed, pmuService exists:', !!pmuService);
-  console.log('🚀 PMUInitializer - Initialized state:', initialized);
+  console.log('🚀 PMUInitializer - pmuService exists:', !!pmuService, 'initialized:', initialized);
   
-  // INICIALIZAÇÃO DIRETA NO NEXT.JS 15 - SEM DETECÇÃO DE CLIENTE
-  // No App Router, componentes 'use client' já executam no lado cliente
+  // INICIALIZAÇÃO IMEDIATA - EXECUTAR NO CORPO DO COMPONENTE
+  React.useMemo(() => {
+    if (!pmuService && !initialized) {
+      console.log('🚀🚀🚀 PMUInitializer - EXECUTANDO INICIALIZAÇÃO IMEDIATA!');
+      setInitialized(true);
+      
+      // Executar inicialização assíncrona
+      (async () => {
+        try {
+          console.log('🚀 PMUInitializer - Carregando módulos...');
+          const [{ loadPMUData }, { PMUService }] = await Promise.all([
+            import('../utils/xmlParser'),
+            import('../services/pmuService')
+          ]);
+          
+          console.log('🚀 PMUInitializer - Carregando dados XML...');
+          const { pmus, config } = await loadPMUData();
+          console.log(`🚀 PMUInitializer - ${pmus?.length || 0} PMUs carregadas!`);
+          
+          console.log('🚀 PMUInitializer - Criando PMU Service...');
+          const service = PMUService.getInstance(config, pmus);
+          
+          console.log('🚀 PMUInitializer - Configurando subscription...');
+          service.subscribe((measurements) => {
+            console.log('📊 PMUInitializer - Dados recebidos:', measurements.length, 'PMUs');
+            setPmuMeasurements(measurements);
+            updateLastUpdate();
+          });
+          
+          setPmuService(service);
+          setIsRealDataConnected(true);
+          
+          console.log('🚀 PMUInitializer - Iniciando polling...');
+          service.start();
+          
+          console.log('⚡ PMUInitializer - Forçando primeira atualização...');
+          await service.forceUpdate();
+          
+          console.log('✅ PMUInitializer - Inicialização concluída!');
+          
+        } catch (error) {
+          console.error('❌ PMUInitializer - Erro na inicialização:', error);
+          setIsRealDataConnected(false);
+        }
+      })();
+    }
+  }, [pmuService, initialized]);
   
-  // INICIALIZAÇÃO IMEDIATA - FORÇAR EXECUÇÃO
-  console.log('🚀🚀🚀 PMUInitializer - EXECUTANDO INICIALIZAÇÃO IMEDIATA!');
-  
-  if (!initialized && !pmuService) {
-    console.log('🚀🚀🚀 PMUInitializer - Condições atendidas, iniciando PMU Service...');
-    setInitialized(true);
-  }
-  
-  // INICIALIZAÇÃO DO PMU SERVICE - NEXT.JS 15 APP ROUTER
+  // FALLBACK useEffect
   useEffect(() => {
-    console.log('🚀🚀🚀 PMUInitializer - useEffect EXECUTADO! initialized:', initialized, 'pmuService exists:', !!pmuService);
-    console.log('🚀🚀🚀 PMUInitializer - useEffect dependencies changed!');
+    console.log('🚀🚀🚀 PMUInitializer - useEffect EXECUTADO!');
+    console.log('🚀 PMUInitializer - pmuService exists:', !!pmuService);
     
-    console.log('⚡ PMUInitializer - EXECUTANDO INICIALIZAÇÃO!');
+    if (pmuService) {
+      console.log('🚀 PMUInitializer - PMU Service já existe, pulando inicialização');
+      return;
+    }
+    
+    if (initialized) {
+      console.log('🚀 PMUInitializer - Já inicializado, pulando useEffect');
+      return;
+    }
+    
+    console.log('🚀 PMUInitializer - Iniciando inicialização do PMU Service via useEffect...');
     setInitialized(true);
     
     const initializePMUService = async () => {
@@ -42,29 +88,18 @@ function PMUInitializerCore() {
         const { pmus, config } = await loadPMUData();
         console.log(`🚀 PMUInitializer - ${pmus?.length || 0} PMUs carregadas!`);
         
-        console.log('🚀 PMUInitializer - Obtendo instância singleton do PMU Service...');
+        console.log('🚀 PMUInitializer - Criando PMU Service...');
         const service = PMUService.getInstance(config, pmus);
         
         console.log('🚀 PMUInitializer - Configurando subscription...');
         service.subscribe((measurements) => {
-          console.log('📊 PMUInitializer - CALLBACK EXECUTADO! Dados recebidos:', measurements.length);
-          console.log('📊 PMUInitializer - Primeiros 3 PMUs:', measurements.slice(0, 3).map(m => ({ id: m.pmuId, freq: m.frequency, timestamp: m.timestamp })));
+          console.log('📊 PMUInitializer - Dados recebidos:', measurements.length, 'PMUs');
           setPmuMeasurements(measurements);
           updateLastUpdate();
-          console.log('📊 PMUInitializer - Store atualizado com', measurements.length, 'medições');
         });
         
         setPmuService(service);
-        console.log('🚀 PMUInitializer - Definindo isRealDataConnected = true');
         setIsRealDataConnected(true);
-        
-        // Verificar se foi definido corretamente
-        setTimeout(() => {
-          const currentState = useDashboardStore.getState();
-          console.log('🔍 PMUInitializer - Verificando estado após 1s:');
-          console.log('🔍 PMUInitializer - isRealDataConnected:', currentState.isRealDataConnected);
-          console.log('🔍 PMUInitializer - pmuMeasurements length:', currentState.pmuMeasurements.length);
-        }, 1000);
         
         console.log('🚀 PMUInitializer - Iniciando polling...');
         service.start();
@@ -73,7 +108,6 @@ function PMUInitializerCore() {
         await service.forceUpdate();
         
         console.log('✅ PMUInitializer - Inicialização concluída!');
-        console.log('✅ PMUInitializer - isRealDataConnected deveria estar true agora');
         
       } catch (error) {
         console.error('❌ PMUInitializer - Erro na inicialização:', error);
@@ -82,16 +116,7 @@ function PMUInitializerCore() {
     };
     
     initializePMUService();
-  }, [initialized, pmuService, setPmuService, setIsRealDataConnected, setPmuMeasurements, updateLastUpdate]);
-  
-  // FORÇAR INICIALIZAÇÃO IMEDIATA SE useEffect NÃO EXECUTAR
-  React.useLayoutEffect(() => {
-    console.log('🚀🚀🚀 PMUInitializer - useLayoutEffect EXECUTADO como fallback!');
-    if (!initialized && !pmuService) {
-      console.log('🚀🚀🚀 PMUInitializer - FORÇANDO inicialização via useLayoutEffect!');
-      setInitialized(true);
-    }
-  }, [initialized, pmuService]);
+  }, []);
 
   // Log do estado atual
   console.log('🚀 PMUInitializer - Component renderizado no cliente (Next.js 15 App Router)');

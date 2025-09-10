@@ -58,19 +58,32 @@ export class PMUService {
     this.config = config;
     this.pmus = pmus;
     
-    // INICIALIZAÇÃO IMEDIATA - sem delay
-    console.log('🚀 PMU Service - Constructor: INICIALIZAÇÃO IMEDIATA!');
-    console.log('🚀 PMU Service - Config recebida:', config);
-    console.log('🚀 PMU Service - PMUs recebidas:', pmus.length);
-    console.log('🚀 PMU Service - Primeira PMU:', pmus[0]);
-    console.log('🚀 PMU Service - Fazendo primeira requisição AGORA...');
+    console.log('🚀 PMU Service - Construtor chamado');
+    console.log('🚀 PMU Service - Config:', this.config);
+    console.log('🚀 PMU Service - PMUs carregadas:', this.pmus.length);
     
-    // Fazer primeira requisição imediatamente
-    this.fetchAndNotify().then(() => {
-      console.log('✅ PMU Service - Primeira requisição concluída no constructor!');
-    }).catch(error => {
-      console.error('❌ PMU Service - Erro na primeira requisição:', error);
+    // Log das PMUs carregadas
+    this.pmus.forEach((pmu, index) => {
+      console.log(`🚀 PMU Service - PMU ${index + 1}: ${pmu.fullName} (freq: ${pmu.frequencyId}, volt: ${pmu.voltageIds.A.modId})`);
+      
+      // Log específico para Itaipu
+      if (pmu.fullName.includes('Itaipu')) {
+        console.log('🎯 PMU Service - ITAIPU DETECTADA:', {
+          id: pmu.id,
+          fullName: pmu.fullName,
+          frequencyId: pmu.frequencyId,
+          dfreqId: pmu.dfreqId,
+          voltageA_modId: pmu.voltageIds.A.modId,
+          voltageA_angId: pmu.voltageIds.A.angId
+        });
+      }
     });
+    
+    // Expor no window para debug
+    if (typeof window !== 'undefined') {
+      (window as any).pmuServiceDebug = this;
+      console.log('🔍 PMU Service - Exposto no window.pmuServiceDebug para debug');
+    }
   }
 
   public static getInstance(config?: WebServiceConfig, pmus?: PMUData[]): PMUService {
@@ -259,7 +272,8 @@ export class PMUService {
     const fiveSecondsAgo = new Date(now.getTime() - 5000); // 5 segundos atrás do UTC atual
     
     // Format as MM-DD-YY HH:mm:ss (UTC) - formato correto para o webservice
-    const formatDateTime = (date: Date): string => {
+    // Tempo inicial SEM milissegundos, tempo final COM .001 milissegundos
+    const formatDateTimeStart = (date: Date): string => {
       const month = String(date.getUTCMonth() + 1).padStart(2, '0');
       const day = String(date.getUTCDate()).padStart(2, '0');
       const year = String(date.getUTCFullYear()).slice(-2);
@@ -270,8 +284,20 @@ export class PMUService {
       return `${month}-${day}-${year}%20${hours}:${minutes}:${seconds}`;
     };
     
-    const currentTimestamp = formatDateTime(fiveSecondsAgo);
-    console.log(`🔍 PMU Service - Buscando dados de: ${currentTimestamp} (UTC atual - 5s: ${fiveSecondsAgo.toISOString()})`);
+    const formatDateTimeEnd = (date: Date): string => {
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(date.getUTCDate()).padStart(2, '0');
+      const year = String(date.getUTCFullYear()).slice(-2);
+      const hours = String(date.getUTCHours()).padStart(2, '0');
+      const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+      const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+      
+      return `${month}-${day}-${year}%20${hours}:${minutes}:${seconds}.001`;
+    };
+    
+    const startTimestamp = formatDateTimeStart(fiveSecondsAgo);
+    const endTimestamp = formatDateTimeEnd(fiveSecondsAgo);
+    console.log(`🔍 PMU Service - Buscando dados de: ${startTimestamp} até ${endTimestamp} (UTC atual - 5s: ${fiveSecondsAgo.toISOString()})`);
     
     // Batch requests to avoid server overload (max 10 IDs per request)
     const BATCH_SIZE = 10;
@@ -296,14 +322,15 @@ export class PMUService {
         // Recalcular timestamp para cada batch para garantir dados mais recentes
         const batchTime = new Date();
         const batchFiveSecondsAgo = new Date(batchTime.getTime() - 5000);
-        const timestamp = formatDateTime(batchFiveSecondsAgo);
-        const url = `/api/historian/timeseriesdata/read/historic/${idsString}/${timestamp}/${timestamp}/json`;
+        const startTs = formatDateTimeStart(batchFiveSecondsAgo);
+        const endTs = formatDateTimeEnd(batchFiveSecondsAgo);
+        const url = `/api/historian/timeseriesdata/read/historic/${idsString}/${startTs}/${endTs}/json`;
         
         try {
           console.log(`🔍 PMU Service - Fetching batch ${i + 1}/${batches.length} (${batch.length} IDs):`, url);
           
           // Usar proxy local para evitar problemas de CORS
-          const proxyUrl = `/api/historian/timeseriesdata/read/historic/${idsString}/${timestamp}/${timestamp}/json`;
+          const proxyUrl = `/api/historian/timeseriesdata/read/historic/${idsString}/${startTs}/${endTs}/json`;
           console.log(`🔍 PMU Service - Buscando dados de 5s atrás via proxy: ${proxyUrl}`);
           
           // Construir URL completa para evitar erro de URL inválida
@@ -427,6 +454,16 @@ export class PMUService {
       const voltageAMag = dataPoints.find(dp => dp.HistorianID === pmu.voltageIds.A.modId);
       const voltageAAng = dataPoints.find(dp => dp.HistorianID === pmu.voltageIds.A.angId);
       
+      // Log específico para Itaipu
+      if (pmu.fullName.includes('Itaipu')) {
+        console.log('🎯 PMU Service - PROCESSANDO ITAIPU:');
+        console.log('  📊 Dados encontrados:');
+        console.log('    Freq (1486):', freqData ? `${freqData.Value}Hz` : '❌ NÃO ENCONTRADO');
+        console.log('    DFreq (1487):', dfreqData ? `${dfreqData.Value}` : '❌ NÃO ENCONTRADO');
+        console.log('    Volt Mag (1503):', voltageAMag ? `${voltageAMag.Value}kV` : '❌ NÃO ENCONTRADO');
+        console.log('    Volt Ang (1504):', voltageAAng ? `${voltageAAng.Value}°` : '❌ NÃO ENCONTRADO');
+      }
+      
       // Debug: Log voltage data for each PMU
       if (voltageAMag || voltageAAng) {
         console.log(`PMU ${pmu.fullName}:`);
@@ -448,18 +485,34 @@ export class PMUService {
       // Não criar dados falsos - só aceitar dados válidos recebidos do servidor
       const hasRealData = hasValidFreqData && hasValidVoltageA;
       
+      // Log específico para Itaipu sobre o filtro
+      if (pmu.fullName.includes('Itaipu')) {
+        console.log('🎯 PMU Service - ITAIPU FILTRO:');
+        console.log('  🔍 hasValidFreqData:', hasValidFreqData);
+        console.log('  🔍 hasValidVoltageA:', hasValidVoltageA);
+        console.log('  🔍 hasRealData (ambos):', hasRealData);
+      }
+      
       if (hasRealData) {
         const freqInfo = `freq: ${freqData.Value.toFixed(3)}Hz`;
         const voltageInfo = `voltage: ${voltageAMag.Value.toFixed(1)}kV`;
         console.log(`✅ PMU ${pmu.fullName} - APROVADA (${freqInfo}, ${voltageInfo})`);
         
+        // Log específico para Itaipu quando aprovada
+        if (pmu.fullName.includes('Itaipu')) {
+          console.log('🎉 PMU Service - ITAIPU APROVADA! Será adicionada ao mapa!');
+        }
+        
         // Usar APENAS dados reais do webservice - sem valores padrão
+        // Normalizar timestamp para o momento da consulta (evita desalinhamento no gráfico)
+        const queryTimestamp = new Date(Date.now() - 5000).toISOString(); // Mesmo timestamp da consulta
+        
         const measurement: PMUMeasurement = {
           pmuId: pmu.id,
           pmuName: pmu.fullName,
           frequency: freqData.Value, // APENAS dados reais
           dfreq: dfreqData?.Value || 0.0,
-          timestamp: freqData.Time,
+          timestamp: queryTimestamp, // Timestamp normalizado para todas as PMUs
           quality: freqData.Quality,
           lat: pmu.lat,
           lon: pmu.lon,
@@ -484,6 +537,16 @@ export class PMUService {
         const freqInfo = hasValidFreqData ? `freq: ${freqData.Value.toFixed(3)}Hz` : 'no freq data';
         const voltageInfo = hasValidVoltageA ? `voltage: ${voltageAMag.Value.toFixed(1)}kV` : 'no voltage data';
         console.log(`❌ PMU ${pmu.fullName} - REJEITADA - dados incompletos (${freqInfo}, ${voltageInfo})`);
+        
+        // Log específico para Itaipu quando rejeitada
+        if (pmu.fullName.includes('Itaipu')) {
+          console.log('💥 PMU Service - ITAIPU REJEITADA! Motivos:');
+          console.log('  - hasValidFreqData:', hasValidFreqData);
+          console.log('  - hasValidVoltageA:', hasValidVoltageA);
+          if (freqData) console.log('  - freqData.Value:', freqData.Value);
+          if (voltageAMag) console.log('  - voltageAMag.Value:', voltageAMag.Value);
+          if (voltageAAng) console.log('  - voltageAAng.Value:', voltageAAng.Value);
+        }
       }
     });
 
