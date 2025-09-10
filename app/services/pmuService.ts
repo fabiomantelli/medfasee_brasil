@@ -81,7 +81,7 @@ export class PMUService {
     
     // Expor no window para debug
     if (typeof window !== 'undefined') {
-      (window as any).pmuServiceDebug = this;
+      (window as Window & { pmuServiceDebug?: PMUService }).pmuServiceDebug = this;
       console.log('🔍 PMU Service - Exposto no window.pmuServiceDebug para debug');
     }
   }
