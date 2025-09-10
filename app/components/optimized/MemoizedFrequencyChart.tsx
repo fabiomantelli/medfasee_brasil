@@ -133,24 +133,28 @@ const FrequencyChartComponent = ({}: MemoizedFrequencyChartProps) => {
     // Atualizar dados sempre que availablePMUs mudar (sincronizado com PMUService)
     setPmuData(prevData => {
       const newData = { ...prevData };
-      const timestamp = new Date();
       
       availablePMUs.forEach((pmu) => {
         if (!newData[pmu.pmuId]) {
           newData[pmu.pmuId] = [];
         }
         
+        // Usar o timestamp original da consulta do webservice
+        const pmuTimestamp = new Date(pmu.timestamp);
+        
         // Verificar se é um novo ponto (evitar duplicatas)
         const lastPoint = newData[pmu.pmuId][newData[pmu.pmuId].length - 1];
-        const timeDiff = lastPoint ? timestamp.getTime() - lastPoint.timestamp.getTime() : Infinity;
+        const timeDiff = lastPoint ? pmuTimestamp.getTime() - lastPoint.timestamp.getTime() : Infinity;
         
         // Só adicionar se passou pelo menos 4 segundos desde o último ponto (tolerância para timing)
         if (timeDiff > 4000) {
           const newPoint: PMUDataPoint = {
-            timestamp,
+            timestamp: pmuTimestamp, // Usar timestamp da consulta
             frequency: pmu.frequency,
             pmuId: pmu.pmuId
           };
+          
+          console.log(`📊 PMU ${pmu.pmuId}: Usando timestamp da consulta: ${pmu.timestamp} -> ${pmuTimestamp.toISOString()}`);
           
           newData[pmu.pmuId] = [...newData[pmu.pmuId], newPoint];
           
@@ -277,17 +281,22 @@ const FrequencyChartComponent = ({}: MemoizedFrequencyChartProps) => {
   const { width, height } = dimensions;
   const padding = Math.min(60, width * 0.08); // Responsive padding
 
-  // Calculate frequency range
+  // Calculate frequency range - dynamic adaptation to data
   const allFrequencies = selectedData.flatMap(item => 
     (item.data || []).map(point => point.frequency)
   ).filter(freq => !isNaN(freq));
   
-  const minFreq = Math.min(...allFrequencies, 59.5);
-  const maxFreq = Math.max(...allFrequencies, 60.5);
+  // Only use actual data for range calculation - no fixed values
+  const minFreq = allFrequencies.length > 0 ? Math.min(...allFrequencies) : 60.0;
+  const maxFreq = allFrequencies.length > 0 ? Math.max(...allFrequencies) : 60.0;
   const freqRange = maxFreq - minFreq;
-  const freqPadding = freqRange * 0.1;
+  
+  // Add padding based on data range, minimum 0.1 Hz for visibility
+  const freqPadding = Math.max(freqRange * 0.15, 0.05); // 15% padding or minimum 0.05 Hz
   const adjustedMinFreq = minFreq - freqPadding;
   const adjustedMaxFreq = maxFreq + freqPadding;
+  
+  console.log(`📊 FrequencyChart - Eixo Y dinâmico: ${adjustedMinFreq.toFixed(3)}Hz - ${adjustedMaxFreq.toFixed(3)}Hz (dados: ${minFreq.toFixed(3)}-${maxFreq.toFixed(3)}Hz)`);
 
   // Scale functions
   const getX = (index: number) => {
@@ -322,15 +331,18 @@ const FrequencyChartComponent = ({}: MemoizedFrequencyChartProps) => {
             </p>
           </div>
           <p className="text-xs text-gray-500">
-            Últimas {maxPoints} medições • Atualizado: {isClient ? getLatestPMUTimestamp : '--:--:--'}
+            Últimas {maxPoints} medições
+          </p>
+          <p className="pt-1 text-xs text-gray-500">
+            Atualizado: {isClient ? getLatestPMUTimestamp : '--:--:--'}
           </p>
         </div>
         
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-2 sm:p-3 w-full sm:w-96 border border-gray-200 shadow-inner">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-2 sm:p-3 w-full sm:w-[26rem] border border-gray-200 shadow-inner">
           <h4 className="text-sm font-medium text-gray-700 mb-2">
             Selecionar PMUs para Visualização
           </h4>
-          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto scrollbar-thin">
+          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto scrollbar-thin p-1">
             {availablePMUs.map((pmu, index) => {
               const isSelected = selectedPMUs.includes(pmu.pmuId);
               const color = PMU_COLORS[index % PMU_COLORS.length];

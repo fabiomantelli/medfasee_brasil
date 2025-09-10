@@ -44,6 +44,7 @@ export interface PMUMeasurement {
 }
 
 export class PMUService {
+  private static instance: PMUService | null = null;
   private config: WebServiceConfig;
   private pmus: PMUData[];
   private observers: ((measurements: PMUMeasurement[]) => void)[] = [];
@@ -59,6 +60,9 @@ export class PMUService {
     
     // INICIALIZAÇÃO IMEDIATA - sem delay
     console.log('🚀 PMU Service - Constructor: INICIALIZAÇÃO IMEDIATA!');
+    console.log('🚀 PMU Service - Config recebida:', config);
+    console.log('🚀 PMU Service - PMUs recebidas:', pmus.length);
+    console.log('🚀 PMU Service - Primeira PMU:', pmus[0]);
     console.log('🚀 PMU Service - Fazendo primeira requisição AGORA...');
     
     // Fazer primeira requisição imediatamente
@@ -67,6 +71,27 @@ export class PMUService {
     }).catch(error => {
       console.error('❌ PMU Service - Erro na primeira requisição:', error);
     });
+  }
+
+  public static getInstance(config?: WebServiceConfig, pmus?: PMUData[]): PMUService {
+    if (!PMUService.instance) {
+      if (!config || !pmus) {
+        throw new Error('PMU Service - Config e PMUs são obrigatórios na primeira inicialização');
+      }
+      console.log('🚀 PMU Service - Criando nova instância singleton');
+      PMUService.instance = new PMUService(config, pmus);
+    } else {
+      console.log('🚀 PMU Service - Retornando instância singleton existente');
+    }
+    return PMUService.instance;
+  }
+
+  public static resetInstance() {
+    if (PMUService.instance) {
+      PMUService.instance.stop();
+      PMUService.instance = null;
+      console.log('🚀 PMU Service - Instância singleton resetada');
+    }
   }
 
   // Public method to start polling
@@ -127,37 +152,58 @@ export class PMUService {
   }
 
   private notifyObservers(measurements: PMUMeasurement[]) {
-    this.observers.forEach(callback => {
+    console.log(`🔔 PMU Service - notifyObservers called with ${measurements.length} measurements`);
+    console.log(`🔔 PMU Service - ${this.observers.length} observers registered`);
+    
+    this.observers.forEach((callback, index) => {
       try {
+        console.log(`🔔 PMU Service - Calling observer ${index + 1}/${this.observers.length}`);
         callback(measurements);
+        console.log(`✅ PMU Service - Observer ${index + 1} executed successfully`);
       } catch (error) {
-        console.error('Error in PMU observer callback:', error);
+        console.error(`❌ PMU Service - Error in observer ${index + 1} callback:`, error);
       }
     });
   }
 
   private async startPolling() {
-    if (this.isPolling) return;
+    if (this.isPolling) {
+      console.log('⚠️ PMU Service - Polling already active');
+      return;
+    }
     
+    this.isPolling = true;
+    console.log('🚀 PMU Service - Starting automatic polling every 5 seconds');
+    console.log(`🚀 PMU Service - Observers count: ${this.observers.length}`);
     console.log('🔍 PMU Service - Iniciando polling OTIMIZADO:');
     console.log('  ⏰ Intervalo: 5 segundos exatos');
-    console.log('  📊 Dados: sempre 5 segundos no passado (UTC)');
-    console.log('  🎯 Timestamp: fixo por ciclo para consistência');
-    this.isPolling = true;
+    console.log('  📊 Dados: sempre UTC atual - 5 segundos');
+    console.log('  🎯 Timestamp: dinâmico para dados mais recentes');
     
     // Initial fetch
     console.log('🚀 PMU Service - Executando primeira busca...');
-    await this.fetchAndNotify();
+    try {
+      await this.fetchAndNotify();
+      console.log('✅ PMU Service - Primeira busca concluída');
+    } catch (error) {
+      console.error('❌ PMU Service - Erro na primeira busca:', error);
+    }
     
-    // Set up interval - atualiza a cada 5 segundos, sempre buscando dados de 5s no passado
+    // Set up interval - atualiza a cada 5 segundos, sempre buscando dados de UTC atual - 5s
+    console.log('🚀 PMU Service - Configurando interval de 5 segundos...');
     this.pollingInterval = setInterval(async () => {
       const cycleStart = new Date();
       console.log(`\n🔄 PMU Service - NOVO CICLO iniciado em ${cycleStart.toISOString()}`);
-      await this.fetchAndNotify();
-      const cycleEnd = new Date();
-      const cycleDuration = cycleEnd.getTime() - cycleStart.getTime();
-      console.log(`✅ PMU Service - Ciclo concluído em ${cycleDuration}ms`);
+      try {
+        await this.fetchAndNotify();
+        const cycleEnd = new Date();
+        const cycleDuration = cycleEnd.getTime() - cycleStart.getTime();
+        console.log(`✅ PMU Service - Ciclo concluído em ${cycleDuration}ms`);
+      } catch (error) {
+        console.error('❌ PMU Service - Erro no ciclo:', error);
+      }
     }, 5000);
+    console.log('✅ PMU Service - Interval configurado com sucesso');
   }
 
   private stopPolling() {
@@ -173,17 +219,23 @@ export class PMUService {
     try {
       const fetchStart = new Date();
       console.log(`📡 PMU Service - Buscando dados em ${fetchStart.toISOString()}`);
+      console.log(`🔍 PMU Service - Iniciando getAllPMUMeasurements...`);
       
       const measurements = await this.getAllPMUMeasurements();
+      
+      console.log(`✅ PMU Service - getAllPMUMeasurements concluído, retornou ${measurements.length} measurements`);
       this.lastMeasurements = measurements;
       
       const fetchEnd = new Date();
       const fetchDuration = fetchEnd.getTime() - fetchStart.getTime();
       console.log(`📊 PMU Service - ${measurements.length} PMUs processadas em ${fetchDuration}ms`);
       
+      console.log(`🚨 PMU Service - ANTES DE NOTIFICAR OBSERVERS - measurements.length: ${measurements.length}`);
       this.notifyObservers(measurements);
+      console.log(`🚨 PMU Service - DEPOIS DE NOTIFICAR OBSERVERS`);
     } catch (error) {
       console.error('❌ PMU Service - Erro ao buscar dados:', error);
+      console.error('❌ PMU Service - Stack trace:', (error as Error).stack);
     }
   }
 
@@ -201,10 +253,10 @@ export class PMUService {
       return [];
     }
     
-    // TIMESTAMP FIXO POR CICLO: Calcular uma única vez para todo o ciclo de polling
-    // Isso garante que todos os batches usem o mesmo timestamp, evitando inconsistências
+    // TIMESTAMP DINÂMICO: Sempre UTC atual - 5 segundos para dados mais recentes
+    // Cada requisição usa o timestamp mais atual possível
     const now = new Date();
-    const fiveSecondsAgo = new Date(now.getTime() - 5000); // 5 segundos atrás
+    const fiveSecondsAgo = new Date(now.getTime() - 5000); // 5 segundos atrás do UTC atual
     
     // Format as MM-DD-YY HH:mm:ss (UTC) - formato correto para o webservice
     const formatDateTime = (date: Date): string => {
@@ -218,8 +270,8 @@ export class PMUService {
       return `${month}-${day}-${year}%20${hours}:${minutes}:${seconds}`;
     };
     
-    const fixedTimestamp = formatDateTime(fiveSecondsAgo);
-    console.log(`🔍 PMU Service - Using FIXED timestamp for all batches: ${fixedTimestamp} (${fiveSecondsAgo.toISOString()})`);
+    const currentTimestamp = formatDateTime(fiveSecondsAgo);
+    console.log(`🔍 PMU Service - Buscando dados de: ${currentTimestamp} (UTC atual - 5s: ${fiveSecondsAgo.toISOString()})`);
     
     // Batch requests to avoid server overload (max 10 IDs per request)
     const BATCH_SIZE = 10;
@@ -233,79 +285,113 @@ export class PMUService {
     
     const allDataPoints: TimeSeriesDataPoint[] = [];
     
-    // Process batches sequentially with delay to avoid overwhelming the server
-    for (let i = 0; i < batches.length; i++) {
-      const batch = batches[i];
-      const idsString = batch.join(',');
-      
-      const timestamp = fixedTimestamp; // Usar o timestamp fixo calculado uma única vez
-      const url = `/api/historian/timeseriesdata/read/historic/${idsString}/${timestamp}/${timestamp}/json`;
-      
-      try {
-        console.log(`🔍 PMU Service - Fetching batch ${i + 1}/${batches.length} (${batch.length} IDs):`, url);
+    try {
+      // Process batches sequentially with delay to avoid overwhelming the server
+      for (let i = 0; i < batches.length; i++) {
+        console.log(`🔍 PMU Service - Processing batch ${i + 1}/${batches.length}`);
         
-        // Usar proxy local para evitar problemas de CORS
-        const proxyUrl = `/api/historian/timeseriesdata/read/historic/${idsString}/${timestamp}/${timestamp}/json`;
-        console.log(`🔍 PMU Service - Buscando dados de 5s atrás via proxy: ${proxyUrl}`);
+        const batch = batches[i];
+        const idsString = batch.join(',');
         
-        const response = await fetch(proxyUrl, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          mode: 'cors'
-        });
+        // Recalcular timestamp para cada batch para garantir dados mais recentes
+        const batchTime = new Date();
+        const batchFiveSecondsAgo = new Date(batchTime.getTime() - 5000);
+        const timestamp = formatDateTime(batchFiveSecondsAgo);
+        const url = `/api/historian/timeseriesdata/read/historic/${idsString}/${timestamp}/${timestamp}/json`;
+        
+        try {
+          console.log(`🔍 PMU Service - Fetching batch ${i + 1}/${batches.length} (${batch.length} IDs):`, url);
+          
+          // Usar proxy local para evitar problemas de CORS
+          const proxyUrl = `/api/historian/timeseriesdata/read/historic/${idsString}/${timestamp}/${timestamp}/json`;
+          console.log(`🔍 PMU Service - Buscando dados de 5s atrás via proxy: ${proxyUrl}`);
+          
+          // Construir URL completa para evitar erro de URL inválida
+          const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+          const fullUrl = new URL(proxyUrl, baseUrl).toString();
+          console.log(`🔍 PMU Service - Full URL: ${fullUrl}`);
+          
+          // Adicionar timeout mais generoso para evitar ERR_ABORTED
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => {
+              console.warn(`⏰ PMU Service - Timeout para batch ${i + 1} após 30 segundos`);
+              controller.abort();
+            }, 30000); // 30 segundos timeout
+            
+            const response = await fetch(fullUrl, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              mode: 'cors',
+              signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
 
-        console.log(`🔍 PMU Service - Batch ${i + 1} response status:`, response.status);
-        
-        if (!response.ok) {
-          console.warn(`🔍 PMU Service - Batch ${i + 1} failed with status ${response.status}`);
-          continue; // Skip this batch but continue with others
-        }
+          console.log(`🔍 PMU Service - Batch ${i + 1} response status:`, response.status);
+          
+          if (!response.ok) {
+            console.warn(`🔍 PMU Service - Batch ${i + 1} failed with status ${response.status}`);
+            continue; // Skip this batch but continue with others
+          }
 
-        const data: TimeSeriesResponse = await response.json();
-        const batchDataPoints = data.TimeSeriesDataPoints || [];
-        console.log(`🔍 PMU Service - Batch ${i + 1} returned ${batchDataPoints.length} data points`);
-        
-        allDataPoints.push(...batchDataPoints);
-        
-        // OTIMIZAÇÃO: Reduzir delay entre batches para carregamento mais rápido
-        // Delay mínimo apenas para evitar sobrecarga do servidor
-        if (i < batches.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 50)); // Reduzido de 100ms para 50ms
+          const data: TimeSeriesResponse = await response.json();
+          const batchDataPoints = data.TimeSeriesDataPoints || [];
+          console.log(`🔍 PMU Service - Batch ${i + 1} returned ${batchDataPoints.length} data points`);
+          
+          allDataPoints.push(...batchDataPoints);
+          
+          // OTIMIZAÇÃO: Reduzir delay entre batches para carregamento mais rápido
+          // Delay mínimo apenas para evitar sobrecarga do servidor
+          if (i < batches.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 50)); // Reduzido de 100ms para 50ms
+          }
+          
+        } catch (error) {
+          if (error instanceof Error) {
+            if (error.name === 'AbortError') {
+              console.warn(`⏰ PMU Service - Batch ${i + 1} foi cancelado por timeout`);
+            } else if (error.message.includes('Failed to fetch')) {
+              console.error(`🌐 PMU Service - Erro de rede no batch ${i + 1}:`, error.message);
+            } else {
+              console.error(`🔍 PMU Service - Erro desconhecido no batch ${i + 1}:`, error);
+            }
+          } else {
+            console.error(`🔍 PMU Service - Error fetching batch ${i + 1}:`, error);
+          }
+          // Continue with other batches even if one fails
         }
         
-      } catch (error) {
-        console.error(`🔍 PMU Service - Error fetching batch ${i + 1}:`, error);
-        // Continue with other batches even if one fails
+        console.log(`🔍 PMU Service - Current total data points: ${allDataPoints.length}`);
       }
-    }
-    
-    console.log(`🔍 PMU Service - Total data points collected: ${allDataPoints.length}`);
-    
-    // If no data was retrieved from webservice, return empty array (no mock data)
-    if (allDataPoints.length === 0) {
-      console.log('🔍 PMU Service - No data from webservice, returning empty array (no mock data)');
+      
+      console.log(`✅ PMU Service - getCurrentData completed with ${allDataPoints.length} total data points`);
+      
+      // If no data was retrieved from webservice, return empty array (no mock data)
+      if (allDataPoints.length === 0) {
+        console.log('🔍 PMU Service - No data from webservice, returning empty array (no mock data)');
+        return [];
+      }
+      
+      return allDataPoints;
+    } catch (error) {
+      console.error(`❌ PMU Service - Error in getCurrentData:`, error);
       return [];
     }
-    
-    return allDataPoints;
   }
 
   // Get all PMU measurements with current data
   async getAllPMUMeasurements(): Promise<PMUMeasurement[]> {
-    // Get all IDs (frequency, dfreq, and voltage)
+    // Get all IDs (frequency, dfreq, and voltage phase A only)
     const allIds: number[] = [];
     this.pmus.forEach(pmu => {
       if (pmu.frequencyId > 0) allIds.push(pmu.frequencyId);
       if (pmu.dfreqId > 0) allIds.push(pmu.dfreqId);
-      // Add voltage IDs for all phases
+      // Add voltage IDs ONLY for phase A (magnitude and angle)
       if (pmu.voltageIds.A.modId > 0) allIds.push(pmu.voltageIds.A.modId);
       if (pmu.voltageIds.A.angId > 0) allIds.push(pmu.voltageIds.A.angId);
-      if (pmu.voltageIds.B.modId > 0) allIds.push(pmu.voltageIds.B.modId);
-      if (pmu.voltageIds.B.angId > 0) allIds.push(pmu.voltageIds.B.angId);
-      if (pmu.voltageIds.C.modId > 0) allIds.push(pmu.voltageIds.C.modId);
-      if (pmu.voltageIds.C.angId > 0) allIds.push(pmu.voltageIds.C.angId);
+      // Phases B and C removed to optimize performance - only phase A needed
     });
 
     // Fetch current data
@@ -337,7 +423,7 @@ export class PMUService {
       const freqData = dataPoints.find(dp => dp.HistorianID === pmu.frequencyId);
       const dfreqData = dataPoints.find(dp => dp.HistorianID === pmu.dfreqId);
       
-      // Get voltage data for all phases
+      // Get voltage data for phase A only
       const voltageAMag = dataPoints.find(dp => dp.HistorianID === pmu.voltageIds.A.modId);
       const voltageAAng = dataPoints.find(dp => dp.HistorianID === pmu.voltageIds.A.angId);
       
@@ -347,10 +433,7 @@ export class PMUService {
         console.log(`  Magnitude ID ${pmu.voltageIds.A.modId}:`, voltageAMag?.Value);
         console.log(`  Angle ID ${pmu.voltageIds.A.angId}:`, voltageAAng?.Value);
       }
-      const voltageBMag = dataPoints.find(dp => dp.HistorianID === pmu.voltageIds.B.modId);
-      const voltageBAng = dataPoints.find(dp => dp.HistorianID === pmu.voltageIds.B.angId);
-      const voltageCMag = dataPoints.find(dp => dp.HistorianID === pmu.voltageIds.C.modId);
-      const voltageCAng = dataPoints.find(dp => dp.HistorianID === pmu.voltageIds.C.angId);
+      // Phases B and C removed - only phase A needed for optimization
       
       // Verificar se temos dados válidos de tensão (necessário para gráficos angulares)
       const hasValidVoltageA = voltageAMag && voltageAAng && 
@@ -361,33 +444,33 @@ export class PMUService {
       // Verificar se temos dados válidos de frequência
       const hasValidFreqData = freqData && freqData.Value > 0 && !isNaN(freqData.Value);
       
-      // FILTRO OTIMIZADO: PMUs aparecem no mapa com qualquer dado válido (frequência OU tensão)
-      // Isso acelera o carregamento inicial e mostra PMUs mais rapidamente
-      const hasAnyValidData = hasValidFreqData || hasValidVoltageA;
+      // FILTRO RIGOROSO: PMUs só são aprovadas com dados REAIS do webservice
+      // Não criar dados falsos - só aceitar dados válidos recebidos do servidor
+      const hasRealData = hasValidFreqData && hasValidVoltageA;
       
-      if (hasAnyValidData) {
-        const freqInfo = hasValidFreqData ? `freq: ${freqData?.Value?.toFixed(3)}Hz` : 'freq: N/A';
-        const voltageInfo = hasValidVoltageA ? `voltage: ${voltageAMag?.Value?.toFixed(1)}kV` : 'voltage: N/A';
+      if (hasRealData) {
+        const freqInfo = `freq: ${freqData.Value.toFixed(3)}Hz`;
+        const voltageInfo = `voltage: ${voltageAMag.Value.toFixed(1)}kV`;
         console.log(`✅ PMU ${pmu.fullName} - APROVADA (${freqInfo}, ${voltageInfo})`);
         
-        // Usar dados de frequência se disponíveis, senão usar valores padrão
+        // Usar APENAS dados reais do webservice - sem valores padrão
         const measurement: PMUMeasurement = {
           pmuId: pmu.id,
           pmuName: pmu.fullName,
-          frequency: freqData?.Value || (hasValidVoltageA ? 60.0 : 0), // Frequência padrão apenas se há dados de tensão
+          frequency: freqData.Value, // APENAS dados reais
           dfreq: dfreqData?.Value || 0.0,
-          timestamp: freqData?.Time || dfreqData?.Time || voltageAMag?.Time || voltageAAng?.Time || new Date().toISOString(),
-          quality: freqData?.Quality || dfreqData?.Quality || voltageAMag?.Quality || voltageAAng?.Quality || 0,
+          timestamp: freqData.Time,
+          quality: freqData.Quality,
           lat: pmu.lat,
           lon: pmu.lon,
           station: pmu.station,
           state: pmu.state,
           area: pmu.area,
           voltLevel: pmu.voltLevel,
-          status: hasValidFreqData ? 'active' : 'partial' // Status diferenciado para PMUs com dados parciais
+          status: 'active' // Só PMUs com dados reais são ativas
         };
         
-        // Add voltage data only if valid
+        // Add voltage data only for phase A (phases B and C removed for optimization)
         if (hasValidVoltageA) {
           measurement.voltageA = {
             magnitude: voltageAMag.Value,
@@ -395,41 +478,17 @@ export class PMUService {
           };
         }
         
-        // Add voltage B data if valid
-        const hasValidVoltageB = voltageBMag && voltageBAng && 
-                                voltageBMag.Value > 0 && 
-                                !isNaN(voltageBMag.Value) && 
-                                !isNaN(voltageBAng.Value);
-        if (hasValidVoltageB) {
-          measurement.voltageB = {
-            magnitude: voltageBMag.Value,
-            angle: voltageBAng.Value
-          };
-        }
-        
-        // Add voltage C data if valid
-        const hasValidVoltageC = voltageCMag && voltageCAng && 
-                                voltageCMag.Value > 0 && 
-                                !isNaN(voltageCMag.Value) && 
-                                !isNaN(voltageCAng.Value);
-        if (hasValidVoltageC) {
-          measurement.voltageC = {
-            magnitude: voltageCMag.Value,
-            angle: voltageCAng.Value
-          };
-        }
-        
         measurements.push(measurement);
       } else {
         filteredCount++;
-        const freqInfo = freqData ? `freq: ${freqData.Value}` : 'no freq';
-        const voltageInfo = hasValidVoltageA ? `voltage: OK` : 'no voltage';
-        console.log(`❌ PMU ${pmu.fullName} - REJEITADA - sem dados válidos (${freqInfo}, ${voltageInfo})`);
+        const freqInfo = hasValidFreqData ? `freq: ${freqData.Value.toFixed(3)}Hz` : 'no freq data';
+        const voltageInfo = hasValidVoltageA ? `voltage: ${voltageAMag.Value.toFixed(1)}kV` : 'no voltage data';
+        console.log(`❌ PMU ${pmu.fullName} - REJEITADA - dados incompletos (${freqInfo}, ${voltageInfo})`);
       }
     });
 
-    console.log(`🔍 PMU Service - Resultado do filtro: ${measurements.length} PMUs aprovadas, ${filteredCount} PMUs filtradas`);
-    console.log(`🔍 PMU Service - FILTRO ATUALIZADO: Agora aceita PMUs apenas com dados de frequência válidos`);
+    console.log(`🔍 PMU Service - Resultado do filtro RIGOROSO: ${measurements.length} PMUs aprovadas, ${filteredCount} PMUs rejeitadas`);
+    console.log(`🔍 PMU Service - FILTRO RIGOROSO: Só aceita PMUs com dados REAIS de frequência E tensão`);
     console.log(`🔍 PMU Service - PMUs aprovadas:`, measurements.map(m => `${m.pmuName} (${m.frequency.toFixed(3)}Hz)`));
     return measurements;
   }

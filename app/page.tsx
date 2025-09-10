@@ -10,20 +10,21 @@ const MemoizedDashboard = dynamic(() => import('./components/optimized/MemoizedD
   ssr: false
 });
 
-const RealBrazilMapComponent = dynamic(() => import('./components/optimized/MemoizedRealBrazilMap'), {
-  loading: () => <div className="animate-pulse bg-gray-200 h-96 rounded-lg flex items-center justify-center"><span className="text-gray-500">🗺️ Carregando mapa...</span></div>,
-  ssr: false
-});
+// Importação direta para renderização instantânea
+import RealBrazilMapComponent from './components/optimized/MemoizedRealBrazilMap';
 
 const FrequencyChartComponent = dynamic(() => import('./components/optimized/MemoizedFrequencyChart'), {
   loading: () => <div className="animate-pulse bg-gray-200 h-96 rounded-lg flex items-center justify-center"><span className="text-gray-500">📊 Carregando gráfico...</span></div>,
   ssr: false
 });
 
-const AngularDifferenceChartComponent = dynamic(() => import('./components/optimized/MemoizedAngularDifferenceChart'), {
-  loading: () => <div className="animate-pulse bg-gray-200 h-96 rounded-lg flex items-center justify-center"><span className="text-gray-500">📐 Carregando análise angular...</span></div>,
-  ssr: false
-});
+// Importação direta para debug
+import PlotlyAngularDifferenceChart from './components/optimized/PlotlyAngularDifferenceChart';
+
+// const AngularDifferenceChartComponent = dynamic(() => import('./components/optimized/MemoizedAngularDifferenceChart'), {
+//   loading: () => <div className="animate-pulse bg-gray-200 h-96 rounded-lg flex items-center justify-center"><span className="text-gray-500">📐 Carregando análise angular (Apache ECharts)...</span></div>,
+//   ssr: false
+// });
 
 const MemoizedNotificationSystem = dynamic(() => import('./components/optimized/MemoizedNotificationSystem'), {
   loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded-lg"></div>,
@@ -32,7 +33,15 @@ const MemoizedNotificationSystem = dynamic(() => import('./components/optimized/
 
 import dynamic from 'next/dynamic';
 import { LoadingOverlay } from './components/ui/Loading';
-import PMUInitializer from './components/PMUInitializer';
+
+// Teste direto sem dynamic import
+import PMUInitializerDirect from './components/PMUInitializer';
+//import DebugPanel from './components/DebugPanel';
+
+const PMUInitializer = dynamic(() => import('./components/PMUInitializer'), {
+  loading: () => <div style={{ display: 'none' }}>Carregando PMU...</div>,
+  ssr: false
+});
 
 const DashboardLayout = dynamic(() => import('./components/server/DashboardLayout'), {
   loading: () => <div className="min-h-screen bg-gray-50 animate-pulse"></div>,
@@ -42,6 +51,7 @@ const DashboardLayout = dynamic(() => import('./components/server/DashboardLayou
 // Dynamic imports for client-side components
 // const PMUInitializer = dynamic(() => import('./components/PMUInitializer'), { ssr: false });
 import { useDashboardInitialization, usePMUData, useLoadingState } from './hooks/useDashboard';
+import { useDashboardStore } from './stores/dashboardStore';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -74,10 +84,19 @@ type DashboardLayouts = {
 };
 
 export default function Home() {
+  console.log('🔍 Page - Home component started, rendering PMUInitializer FIRST');
+  console.log('🚀 Home - FUNÇÃO HOME EXECUTANDO - TESTE 2025');
+  
   // Modern hooks for dashboard management
   const { isInitialized } = useDashboardInitialization();
   const { measurements, regionData, isRealDataConnected, stats } = usePMUData();
   const { isLoading } = useLoadingState();
+  
+  // RENDER PMUInitializer IMMEDIATELY - NO CONDITIONS
+  console.log('🔍 Page - About to render PMUInitializer UNCONDITIONALLY');
+  
+  // PMU INITIALIZATION REMOVED - Now handled by PMUInitializer component only
+  console.log('🚀 Page - PMU initialization delegated to PMUInitializer component');
 
   // Estado para layouts dos painéis redimensionáveis - otimizado para mobile 2025
   const [layouts, setLayouts] = useState<DashboardLayouts>({
@@ -143,8 +162,10 @@ export default function Home() {
 
   // System data derived from PMU measurements
   const systemData = React.useMemo(() => {
-    // Use um timestamp fixo durante a hidratação
-    const timestamp = isClient ? new Date().toISOString() : '2024-01-01T00:00:00.000Z';
+    // Usar timestamp em tempo real: UTC atual menos 5 segundos (conforme falha do webservice)
+    const now = new Date();
+    const fiveSecondsAgo = new Date(now.getTime() - 5000);
+    const timestamp = isClient ? fiveSecondsAgo.toISOString() : '2024-01-01T00:00:00.000Z';
     
     if (!measurements || measurements.length === 0) {
       return {
@@ -219,12 +240,25 @@ export default function Home() {
     );
   }
 
-  // Initialize PMU service component
-  const pmuInitializerElement = <PMUInitializer />;
+  // Initialize PMU service component - FORÇAR RENDERIZAÇÃO
+  console.log('🔍 Page - FORÇANDO renderização do PMUInitializer');
+  console.log('🔍 Page - PMUInitializer component type:', PMUInitializer);
+  
+  // RENDER PMUInitializer FIRST - UNCONDITIONAL
+  const pmuInitializer = <PMUInitializer />;
+  
+  console.log('🔍 Page - PMUInitializer component created:', pmuInitializer);
+  console.log('🔍 Page - About to return JSX with PMUInitializer');
   
   return (
     <div>
-      {pmuInitializerElement}
+      {/* DEBUG: Painel de debug */}
+      {/*<DebugPanel />*/}
+      {/* PMU Initializer - TESTE DIRETO SEM DYNAMIC */}
+      <PMUInitializerDirect />
+      {/* PMU Initializer - DEVE SER EXECUTADO PRIMEIRO */}
+      <PMUInitializer />
+      {pmuInitializer}
       <DashboardLayout currentPath="/" showMetrics={true}>
       <LoadingOverlay loading={isLoading} message="Carregando dados do dashboard...">
         <div className="space-y-6">
@@ -323,17 +357,7 @@ export default function Home() {
               </h3>
             </div>
             <div className="p-2 md:p-4 no-drag h-full overflow-hidden panel-content">
-              <Suspense fallback={
-                <div className="animate-pulse">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
-                  <div className="h-96 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                </div>
-              }>
-                {(() => {
-                  console.log('🗺️ Page - Rendering optimized RealBrazilMapComponent (no memo, no props needed)');
-return <RealBrazilMapComponent />;
-                })()}
-              </Suspense>
+              <RealBrazilMapComponent />
             </div>
           </div>
           
@@ -366,17 +390,7 @@ return <RealBrazilMapComponent />;
               </h3>
             </div>
             <div className="p-2 md:p-4 no-drag h-full overflow-hidden panel-content">
-              <Suspense fallback={
-                <div className="animate-pulse">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
-                  <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                </div>
-              }>
-                {(() => {
-                  console.log('🔍 Page - Rendering AngularDifferenceChartComponent with systemData (no memo):', systemData);
-                  return <AngularDifferenceChartComponent systemData={systemData} />;
-                })()}
-              </Suspense>
+              <PlotlyAngularDifferenceChart systemData={systemData} />
             </div>
           </div>
           

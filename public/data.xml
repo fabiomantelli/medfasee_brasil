@@ -1172,8 +1172,8 @@
     </measurements>
   </pmu>
   <pmu>
-    <idName>S_PR_Foz_do_Iguacu_PTI</idName>
-    <fullName>PTI_Foz_do_Iguacu_PR</fullName>
+    <idName>S_PR_Foz_do_Iguacu_Itaipu_Ptec</idName>
+    <fullName>Itaipu_Ptec_Foz_do_Iguacu_PR</fullName>
     <voltLevel>220</voltLevel>
     <local>
       <area>S</area>

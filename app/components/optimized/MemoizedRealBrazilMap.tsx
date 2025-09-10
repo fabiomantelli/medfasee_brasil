@@ -8,10 +8,7 @@ import { usePMUData } from '../../hooks/useDashboard';
 const RealBrazilMap = dynamic(() => import('../RealBrazilMap'), {
   ssr: false,
   loading: () => (
-    <div className="animate-pulse">
-      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
-      <div className="h-96 bg-gray-200 dark:bg-gray-700 rounded"></div>
-    </div>
+    <div className="animate-pulse bg-gray-200 h-96 rounded-lg"></div>
   )
 });
 
@@ -21,10 +18,12 @@ const RealBrazilMapComponent = () => {
   console.log('🗺️ RealBrazilMapComponent - Using internal selectors and TanStack Query');
   
   // Use optimized hooks internally
-  const { measurements } = usePMUData();
+  const { measurements, stats, isRealDataConnected } = usePMUData();
   
   console.log('🗺️ RealBrazilMapComponent - Data from optimized hooks:', {
-    measurementsCount: measurements?.length || 0
+    measurementsCount: measurements?.length || 0,
+    activePMUs: stats.activePMUs,
+    totalPMUs: stats.totalPMUs
   });
   
   return (

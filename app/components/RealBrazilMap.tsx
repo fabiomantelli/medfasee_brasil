@@ -49,6 +49,14 @@ const MapComponent = ({}: OptimizedMapProps) => {
   const pmuService = useDashboardStore(state => state.pmuService);
   const setPmuMeasurements = useDashboardStore(state => state.setPmuMeasurements);
   
+  // Estado de cliente - igual aos outros componentes
+  const [isClient, setIsClient] = useState(false);
+  
+  // Inicializar cliente
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
   // OTIMIZAÇÃO: Carregar dados em cache imediatamente quando o mapa inicializa
   React.useEffect(() => {
     if (pmuService && pmuMeasurements.length === 0) {
@@ -61,10 +69,9 @@ const MapComponent = ({}: OptimizedMapProps) => {
         console.log('🗺️ Mapa - Nenhum dado em cache, aguardando primeira requisição...');
       }
     }
-  }, [pmuService, pmuMeasurements.length, setPmuMeasurements]);
-  
-  // Memoização dos dados de frequência para evitar recálculos
-  // OTIMIZAÇÃO: Mostrar PMUs imediatamente, mesmo com dados parciais
+  }, [pmuService, setPmuMeasurements]);
+
+  // Memoização dos dados de frequência - APENAS dados reais
   const frequencyData = React.useMemo(() => 
     pmuMeasurements.map(pmu => ({
       ...pmu,
@@ -73,36 +80,55 @@ const MapComponent = ({}: OptimizedMapProps) => {
       latitude: pmu.lat,
       longitude: pmu.lon,
       rocof: pmu.dfreq,
-      // Fallback para PMUs com dados parciais
-      frequency: pmu.frequency || 60.0, // Frequência padrão se não disponível
-      displayStatus: pmu.status === 'partial' ? 'Carregando...' : pmu.status
+      // APENAS dados reais - sem fallbacks
+      frequency: pmu.frequency, // Só dados reais do webservice
+      displayStatus: pmu.status
     })),
     [pmuMeasurements]
   );
   
-  // Importações do Leaflet dentro do componente para evitar problemas de SSR
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { MapContainer, TileLayer, Marker, Popup, CircleMarker } = require('react-leaflet');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const L = require('leaflet');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  require('leaflet-defaulticon-compatibility');
-
   // Estado local mínimo - apenas PMU selecionada
   const [selectedPMU, setSelectedPMU] = useState<MapFrequencyData | null>(null);
+  
+  // Componentes do Leaflet carregados estaticamente para melhor performance
+  const [leafletComponents, setLeafletComponents] = React.useState<any>(null);
+  
+  React.useEffect(() => {
+    if (isClient) {
+      // Carregamento imediato sem async/await
+      Promise.all([
+        import('leaflet'),
+        import('react-leaflet')
+      ]).then(([L, reactLeaflet]) => {
+        const { MapContainer, TileLayer, Marker, Popup, CircleMarker } = reactLeaflet;
+        
+        // Configurar ícones do Leaflet
+        delete (L.default as any).Icon.Default.prototype._getIconUrl;
+        L.default.Icon.Default.mergeOptions({
+          iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+          iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+        });
+        
+        setLeafletComponents({ MapContainer, TileLayer, Marker, Popup, CircleMarker, L: L.default });
+      });
+    }
+  }, [isClient]);
 
   // Atualizar PMU selecionada quando os dados são atualizados
   React.useEffect(() => {
     if (selectedPMU && frequencyData?.length > 0) {
       const updatedPMU = frequencyData.find(pmu => pmu.pmuId === selectedPMU.pmuId);
-      if (updatedPMU) {
+      if (updatedPMU && updatedPMU.timestamp !== selectedPMU.timestamp) {
         setSelectedPMU(updatedPMU);
       }
     }
-  }, [frequencyData, selectedPMU]);
+  }, [frequencyData]); // Removido selectedPMU das dependências para evitar loops
 
   // Função para criar ícones customizados modernos para 2025
   const createCustomIcon = (frequency: number) => {
+    if (!leafletComponents?.L) return null;
+    
     let color = '#10B981'; // Verde (normal)
     let glowColor = '#10b981';
     if (Math.abs(frequency - 60) > 0.5) {
@@ -113,7 +139,7 @@ const MapComponent = ({}: OptimizedMapProps) => {
       glowColor = '#f59e0b';
     }
     
-    return L.divIcon({
+    return leafletComponents.L.divIcon({
       className: 'custom-marker',
       html: `
         <div style="
@@ -149,15 +175,17 @@ const MapComponent = ({}: OptimizedMapProps) => {
     });
   };
 
-  // DADOS OTIMIZADOS - Mostrar PMUs com qualquer dado válido mais rapidamente
-  const realMeasurements = (frequencyData || []).filter(pmu => {
-    const hasValidFreq = pmu.frequency > 0;
-    const hasValidTimestamp = pmu.timestamp && pmu.timestamp !== '2024-01-01T00:00:00.000Z';
-    const isConnected = pmu.status === 'connected' || pmu.status === 'active' || pmu.status === 'partial';
-    
-    // PMU aparece no mapa se tem dados válidos E timestamp válido E está conectada
-    return (hasValidFreq || pmu.status === 'partial') && hasValidTimestamp && isConnected;
-  });
+  // DADOS OTIMIZADOS - Memoizar para evitar re-renderizações do cabeçalho
+  const realMeasurements = React.useMemo(() => {
+    return (frequencyData || []).filter(pmu => {
+      const hasValidFreq = pmu.frequency > 0;
+      const hasValidTimestamp = pmu.timestamp && pmu.timestamp !== '2024-01-01T00:00:00.000Z';
+      const isConnected = pmu.status === 'connected' || pmu.status === 'active' || pmu.status === 'partial';
+      
+      // PMU aparece no mapa se tem dados válidos E timestamp válido E está conectada
+      return (hasValidFreq || pmu.status === 'partial') && hasValidTimestamp && isConnected;
+    });
+  }, [frequencyData]);
   
   // Obter TODAS as PMUs do XML para mostrar círculos vermelhos das inativas APENAS quando há dados
   const allPMUsFromXML = pmuService?.getAllPMUs() || [];
@@ -178,29 +206,33 @@ const MapComponent = ({}: OptimizedMapProps) => {
   // Isso evita mostrar círculos vermelhos no carregamento inicial
   const hasWebserviceData = frequencyData.length > 0 && isConnected;
   
-  // Identificar PMUs ativas e inativas APENAS se há dados do webservice
-  const activePMUIds = new Set(realMeasurements.map(pmu => pmu.pmuId));
+  // Identificar PMUs ativas e inativas APENAS se há dados do webservice - Memoizado
+  const activePMUIds = React.useMemo(() => {
+    return new Set(realMeasurements.map(pmu => pmu.pmuId));
+  }, [realMeasurements]);
   
-  // Criar lista de PMUs inativas baseada no XML completo APENAS se há dados
-  const inactivePMUs = hasWebserviceData ? allPMUsFromXML
-    .filter(pmu => !activePMUIds.has(pmu.id)) // PMUs que não têm dados válidos
-    .map(pmu => ({
-      pmuId: pmu.id,
-      pmuName: pmu.fullName,
-      frequency: 0,
-      dfreq: 0,
-      timestamp: '',
-      quality: 0,
-      lat: pmu.lat,
-      lon: pmu.lon,
-      latitude: pmu.lat,
-      longitude: pmu.lon,
-      station: pmu.station,
-      state: pmu.state,
-      area: pmu.area,
-      voltLevel: pmu.voltLevel,
-      status: 'disconnected'
-    })) : [];
+  // Criar lista de PMUs inativas baseada no XML completo APENAS se há dados - Memoizada
+  const inactivePMUs = React.useMemo(() => {
+    return hasWebserviceData ? allPMUsFromXML
+      .filter(pmu => !activePMUIds.has(pmu.id)) // PMUs que não têm dados válidos
+      .map(pmu => ({
+        pmuId: pmu.id,
+        pmuName: pmu.fullName,
+        frequency: 0,
+        dfreq: 0,
+        timestamp: '',
+        quality: 0,
+        lat: pmu.lat,
+        lon: pmu.lon,
+        latitude: pmu.lat,
+        longitude: pmu.lon,
+        station: pmu.station,
+        state: pmu.state,
+        area: pmu.area,
+        voltLevel: pmu.voltLevel,
+        status: 'disconnected'
+      })) : [];
+  }, [hasWebserviceData, allPMUsFromXML, activePMUIds]);
   
   console.log('🗺️ RealBrazilMap - Has webservice data:', hasWebserviceData);
   console.log('🗺️ RealBrazilMap - Active PMUs (real data):', activePMUIds.size, 'Inactive PMUs (red circles):', inactivePMUs.length);
@@ -213,50 +245,27 @@ const MapComponent = ({}: OptimizedMapProps) => {
   // O mapa aparece vazio no início e as PMUs aparecem conforme os dados chegam
   const shouldShowMap = allPMUsFromXML.length > 0; // Só precisa do XML carregado
   
+  // Não precisa mais de controle de carregamento inicial complexo
+
   // Função para renderizar o conteúdo do mapa baseado no estado
   const renderMapContent = () => {
-    // Estado de carregamento - diferencia webservice desconectado vs aguardando PMUs
-    if (!isConnected) {
+    // Se o Leaflet ainda não carregou ou não há PMUs, mostrar carregamento do mapa
+    if (!isClient || !leafletComponents || realMeasurements.length === 0) {
       return (
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-2 sm:p-4 border border-slate-300 shadow-inner overflow-hidden flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-gray-600 mb-2">
-              <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <p className="text-gray-600 text-sm mb-1">🔌 Webservice indisponível</p>
-            <p className="text-gray-500 text-xs">
-              Aguardando conexão com o servidor de dados...
+        <div className="w-full h-full relative bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl border border-slate-300 overflow-hidden flex items-center justify-center">
+          <div className="text-center p-8">
+            <div className="text-6xl mb-4 animate-spin">🗺️</div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Carregando mapa...</h3>
+            <p className="text-sm text-gray-500">
+              Preparando visualização do sistema elétrico
             </p>
           </div>
         </div>
       );
     }
-
-    // Estado aguardando configuração das PMUs (webservice conectado)
-    if (!shouldShowMap) {
-      const pmuCount = pmuMeasurements?.length || 0;
-      return (
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-2 sm:p-4 border border-slate-300 shadow-inner overflow-hidden flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-gray-600 mb-2">
-              <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-            <p className="text-gray-600 text-sm mb-1">
-                {pmuCount === 0 ? '⏳ Carregando mapa...' : '🗺️ Carregando mapa do sistema...'}
-              </p>
-              <p className="text-gray-500 text-xs">
-                {pmuCount === 0 ? 'Aguardando dados das PMUs' : `${pmuCount} PMU${pmuCount > 1 ? 's' : ''} detectada${pmuCount > 1 ? 's' : ''}, carregando configuração...`}
-              </p>
-            </div>
-        </div>
-      );
-    }
-
-    // Renderizar o mapa quando tudo estiver pronto
+    
+    const { MapContainer, TileLayer, Marker, Popup, CircleMarker } = leafletComponents;
+    
     return (
       <div className="w-full h-full">
         <MapContainer
@@ -330,36 +339,49 @@ const MapComponent = ({}: OptimizedMapProps) => {
     );
   };
 
+  // Componente memoizado para o cabeçalho - evita re-renderizações desnecessárias
+  const MapHeader = React.memo(({ activePMUCount, inactivePMUCount, showStats }: {
+    activePMUCount: number;
+    inactivePMUCount: number;
+    showStats: boolean;
+  }) => (
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0 flex-shrink-0">
+      <div className="flex items-center space-x-2">
+        <div className="w-3 h-3 bg-gradient-to-r from-emerald-600 to-cyan-800 rounded-full animate-pulse"></div>
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+          Mapa do Sistema Elétrico
+        </h3>
+        <p className="text-xs sm:text-sm text-gray-500">
+          PMUs
+        </p>
+      </div>
+      {showStats && (
+        <div className="flex items-center space-x-2 text-xs text-gray-500">
+          <span>PMUs Ativas: <span className="text-green-600 font-medium">{activePMUCount}</span></span>
+          <span>•</span>
+          <span>Inativas: <span className="text-red-500 font-medium">{inactivePMUCount}</span></span>
+        </div>
+      )}
+    </div>
+  ));
+
   // Estrutura principal do painel sempre presente
   return (
     <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 sm:p-4 pb-4 sm:pb-6 flex flex-col" style={{height: 'calc(100% - 4rem)'}}>
-      {/* Cabeçalho do painel */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0 flex-shrink-0">
-        <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 bg-gradient-to-r from-emerald-600 to-cyan-800 rounded-full animate-pulse"></div>
-          <h3 className="text-lg sm:text-xl font-bold text-gray-900">
-            Mapa do Sistema Elétrico
-          </h3>
-          <p className="text-xs sm:text-sm text-gray-500">
-            PMUs
-          </p>
-        </div>
-        {shouldShowMap && (
-          <div className="flex items-center space-x-2 text-xs text-gray-500">
-            <span>PMUs Ativas: <span className="text-green-600 font-medium">{realMeasurements.length}</span></span>
-            <span>•</span>
-            <span>Inativas: <span className="text-red-500 font-medium">{inactivePMUs.length}</span></span>
-          </div>
-        )}
-      </div>
+      {/* Cabeçalho do painel memoizado */}
+      <MapHeader 
+        activePMUCount={realMeasurements.length}
+        inactivePMUCount={inactivePMUs.length}
+        showStats={isClient}
+      />
 
       {/* Área do mapa */}
       <div className="flex-1 relative">
         {renderMapContent()}
       </div>
       
-      {/* Informações do mapa - só aparece quando o mapa está carregado */}
-      {shouldShowMap && (
+      {/* Informações do mapa - só aparece quando o cliente está pronto */}
+      {isClient && (
         <div className="flex-shrink-0 mt-4 pt-3 border-t border-gray-100">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-gray-500">
             <div className="flex items-center space-x-4">

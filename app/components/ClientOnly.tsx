@@ -15,6 +15,7 @@ export default function ClientOnly({ children, fallback = null }: ClientOnlyProp
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
+    console.log('🔧 ClientOnly - Component mounted, setting hasMounted to true');
     setHasMounted(true);
   }, []);
 

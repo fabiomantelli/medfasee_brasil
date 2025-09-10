@@ -139,15 +139,16 @@ async function fetchWithRetry(url: string, retries = 3, delay = 1000): Promise<R
   for (let i = 0; i < retries; i++) {
     try {
       console.log(`🔍 XMLParser - Attempt ${i + 1} to fetch ${url}`);
-      // Try different URL formats
-      const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001';
-      const urls = [
-        url,
-        `http://localhost:3001${url}`,
-        `${baseUrl}${url}`
-      ];
       
-      let lastError;
+      // Try multiple URL variations to handle different environments
+       const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+       const urls = [
+         `${baseUrl}${url}`, // Absolute URL with origin (FIRST)
+         url, // Original URL
+         url.startsWith('/') ? url : `/${url}` // Ensure leading slash
+       ];
+      
+      let lastError: any;
       for (const tryUrl of urls) {
         try {
           console.log(`🔍 XMLParser - Trying URL: ${tryUrl}`);

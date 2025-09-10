@@ -23,13 +23,22 @@ export async function GET(
     
     console.log('🔍 Historic API Route - Fetching from:', webserviceUrl);
     
-    // Make the request to the external webservice
+    // Make the request to the external webservice with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.warn('🔍 Historic API Route - Timeout após 25 segundos, cancelando requisição');
+      controller.abort();
+    }, 25000); // 25 segundos timeout
+    
     const response = await fetch(webserviceUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
       console.error('🔍 Historic API Route - External service error:', response.status, response.statusText);
@@ -52,6 +61,21 @@ export async function GET(
     });
     
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        console.warn('🔍 Historic API Route - Requisição cancelada por timeout');
+        return NextResponse.json(
+          { error: 'Request timeout - webservice não respondeu em 25 segundos' },
+          { status: 408 }
+        );
+      } else if (error.message.includes('fetch')) {
+        console.error('🔍 Historic API Route - Erro de rede:', error.message);
+        return NextResponse.json(
+          { error: 'Network error - não foi possível conectar ao webservice' },
+          { status: 503 }
+        );
+      }
+    }
     console.error('🔍 Historic API Route - Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },

@@ -26,24 +26,49 @@ interface MemoizedDashboardProps {
  * Dashboard moderno 2025 conectado ao store centralizado
  * Sem React.memo - dados mudam constantemente a cada 5 segundos
  */
-const MemoizedDashboard = ({}: MemoizedDashboardProps) => {
-  // Use Zustand store directly
-  const { stats, pmuMeasurements, isRealDataConnected, pmuService } = useDashboardStore();
+const MemoizedDashboard = ({ systemData, mapComponent, chartComponent, angularComponent }: MemoizedDashboardProps) => {
+  // Usar dados centralizados do Zustand store
+  const { stats, pmuMeasurements, isRealDataConnected } = useDashboardStore();
   
-  // Total PMUs do XML
-  const totalPMUs = pmuService?.getAllPMUs()?.length || 0;
-  
-  // PMUs ativas do webservice
-  const activePMUs = pmuMeasurements?.length || 0;
-  
-  // Calcular métricas em tempo real do store centralizado com memoização
-  // const systemHealth = stats.averageFrequency > 0 ? 'healthy' : 'disconnected';
-  
-
+  const totalPMUs = stats.totalPMUs;
+  const activePMUs = stats.activePMUs;
+  const avgFrequency = stats.averageFrequency;
+  const lastUpdate = stats.lastUpdate;
   
   console.log('🔍 MemoizedDashboard - Modern 2025 Dashboard rendered');
   console.log('🔍 MemoizedDashboard - Stats from centralized store:', stats);
   console.log('🔍 MemoizedDashboard - PMU Measurements from store:', pmuMeasurements?.length || 0);
+  console.log('🔍 MemoizedDashboard - Real data connected:', isRealDataConnected);
+
+  // Estado de desconexão quando webservice não está disponível
+  if (!isRealDataConnected) {
+    return (
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 sm:p-4 pb-4 sm:pb-6 flex flex-col" style={{height: 'calc(100% - 4rem)'}}>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0 flex-shrink-0">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-gradient-to-r from-slate-700 to-slate-900 rounded-full animate-pulse"></div>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+              Alertas e Estatísticas
+            </h3>
+          </div>
+        </div>
+        
+        <div className="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-1 border border-slate-300 overflow-hidden flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-gray-600 mb-2">
+              <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <p className="text-gray-600 text-sm mb-1">🔌 Webservice indisponível</p>
+            <p className="text-gray-500 text-xs">
+              Aguardando conexão com o servidor de dados...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Estado de carregamento quando não há PMUs conectadas
   if (activePMUs === 0) {
