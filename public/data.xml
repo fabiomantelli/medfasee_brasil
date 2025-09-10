@@ -958,7 +958,7 @@
   </pmu>
   <pmu>
     <idName>NE_PI_Teresina_UFPI</idName>
-    <fullName>UFPI</fullName>
+    <fullName>UFPI_Teresina_PI</fullName>
     <voltLevel>380</voltLevel>
     <local>
       <area>NE</area>
