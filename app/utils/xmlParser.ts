@@ -160,7 +160,7 @@ async function fetchWithRetry(url: string, retries = 3, delay = 1000): Promise<R
           throw new Error(`HTTP error! status: ${response.status}`);
         } catch (urlError) {
           console.log(`🔍 XMLParser - Failed with URL ${tryUrl}:`, urlError);
-          lastError = urlError;
+          lastError = urlError instanceof Error ? urlError : new Error(String(urlError));
         }
       }
       throw lastError;

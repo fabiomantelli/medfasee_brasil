@@ -2,11 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { useDashboardStore } from '../stores/dashboardStore';
-import ClientOnly from './ClientOnly';
 
 function PMUInitializerCore() {
   console.log('🚀🚀🚀 PMUInitializer - EXECUTANDO AGORA - TESTE FORÇADO 2025 🚀🚀🚀');
-  const { pmuService, setPmuService, setIsRealDataConnected, setPmuMeasurements, updateLastUpdate, isRealDataConnected } = useDashboardStore();
+  const { pmuService, setPmuService, setIsRealDataConnected, setPmuMeasurements, updateLastUpdate } = useDashboardStore();
   const [initialized, setInitialized] = useState(false);
   
   console.log('🚀 PMUInitializer - Store accessed, pmuService exists:', !!pmuService);

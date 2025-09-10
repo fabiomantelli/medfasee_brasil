@@ -69,7 +69,7 @@ const MapComponent = ({}: OptimizedMapProps) => {
         console.log('🗺️ Mapa - Nenhum dado em cache, aguardando primeira requisição...');
       }
     }
-  }, [pmuService, setPmuMeasurements]);
+  }, [pmuService, setPmuMeasurements, pmuMeasurements.length]);
 
   // Memoização dos dados de frequência - APENAS dados reais
   const frequencyData = React.useMemo(() => 
@@ -94,9 +94,12 @@ const MapComponent = ({}: OptimizedMapProps) => {
   const [leafletComponents, setLeafletComponents] = React.useState<{
     MapContainer: React.ComponentType<React.PropsWithChildren<{ center: [number, number]; zoom: number; style: React.CSSProperties }>>;
     TileLayer: React.ComponentType<{ url: string; attribution: string }>;
-    Marker: any;
-    Popup: React.ComponentType<React.PropsWithChildren<Record<string, never>>>;
-    CircleMarker: React.ComponentType<React.PropsWithChildren<{ center: [number, number]; radius: number; fillColor: string; color: string; weight: number; opacity: number; fillOpacity: number }>>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Marker: React.ComponentType<any>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Popup: React.ComponentType<any>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    CircleMarker: React.ComponentType<any>;
     L: typeof import('leaflet');
   } | null>(null);
   
@@ -130,7 +133,7 @@ const MapComponent = ({}: OptimizedMapProps) => {
         setSelectedPMU(updatedPMU);
       }
     }
-  }, [frequencyData]); // Removido selectedPMU das dependências para evitar loops
+  }, [frequencyData, selectedPMU]);
 
   // Função para criar ícones customizados modernos para 2025
   const createCustomIcon = (frequency: number) => {
@@ -195,7 +198,9 @@ const MapComponent = ({}: OptimizedMapProps) => {
   }, [frequencyData]);
   
   // Obter TODAS as PMUs do XML para mostrar círculos vermelhos das inativas APENAS quando há dados
-  const allPMUsFromXML = pmuService?.getAllPMUs() || [];
+  const allPMUsFromXML = React.useMemo(() => {
+    return pmuService?.getAllPMUs() || [];
+  }, [pmuService]);
   
   console.log('🗺️ RealBrazilMap - REAL DATA ONLY - No simulation allowed');
   console.log('🗺️ RealBrazilMap - Valid real measurements:', realMeasurements.length);

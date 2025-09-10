@@ -18,7 +18,7 @@ const RealBrazilMapComponent = () => {
   console.log('🗺️ RealBrazilMapComponent - Using internal selectors and TanStack Query');
   
   // Use optimized hooks internally
-  const { measurements, stats, isRealDataConnected } = usePMUData();
+  const { measurements, stats } = usePMUData();
   
   console.log('🗺️ RealBrazilMapComponent - Data from optimized hooks:', {
     measurementsCount: measurements?.length || 0,
