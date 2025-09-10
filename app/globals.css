@@ -192,15 +192,17 @@ body {
     @apply min-h-[250px];
     width: 100% !important;
     left: 0 !important;
+    margin: 0 auto !important;
   }
   
   .react-grid-item > .react-resizable-handle {
     @apply hidden; /* Remove resize handle em mobile */
   }
   
-  /* Layout em coluna única para mobile */
+  /* Layout em coluna única para mobile centralizado */
   .react-grid-layout {
-    @apply flex flex-col gap-4;
+    @apply flex flex-col gap-4 items-center;
+    max-width: 100%;
   }
   
   /* Títulos menores em mobile */

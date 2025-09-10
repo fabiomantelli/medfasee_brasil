@@ -291,19 +291,19 @@ export default function Home() {
           )}
 
         {/* Status do Dashboard Moderno */}
-        <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Dashboard Projeto MedFasee BT</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
+        <div className="mb-6 p-3 md:p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+            <div className="flex-1">
+              <h2 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white leading-tight">Dashboard Projeto MedFasee BT</h2>
+              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300 mt-1">
                 Zustand Store • Custom Hooks • {stats.activePMUs}/{stats.totalPMUs} PMUs ativas
               </p>
             </div>
-            <div className="flex items-center space-x-2">
-              <div className={`w-3 h-3 rounded-full ${
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              <div className={`w-2 h-2 md:w-3 md:h-3 rounded-full ${
                 isRealDataConnected ? 'bg-green-500' : 'bg-yellow-500'
               }`}></div>
-              <span className="text-sm text-gray-600 dark:text-gray-300">
+              <span className="text-xs md:text-sm text-gray-600 dark:text-gray-300">
                 {isRealDataConnected ? 'Dados Reais' : 'Simulado'}
               </span>
             </div>
@@ -321,7 +321,7 @@ export default function Home() {
           isDraggable={typeof window !== 'undefined' && window.innerWidth > 768}
           isResizable={typeof window !== 'undefined' && window.innerWidth > 768}
           margin={typeof window !== 'undefined' && window.innerWidth <= 768 ? [8, 8] : [16, 16]}
-          containerPadding={typeof window !== 'undefined' && window.innerWidth <= 768 ? [8, 8] : [0, 0]}
+          containerPadding={typeof window !== 'undefined' && window.innerWidth <= 480 ? [16, 8] : typeof window !== 'undefined' && window.innerWidth <= 768 ? [8, 8] : [0, 0]}
           draggableCancel=".no-drag"
         >
           {/* Dashboard Principal */}
