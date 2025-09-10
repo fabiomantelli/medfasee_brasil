@@ -126,7 +126,7 @@ const MemoizedDashboard = ({}: MemoizedDashboardProps) => {
             
             <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-purple-200">
               <div className="text-2xl font-bold text-purple-700">{(stats.averageFrequency || 0).toFixed(1)}Hz</div>
-              <div className="text-sm text-gray-600 font-medium">Freq. Média</div>
+              <div className="text-sm text-gray-600 font-medium">Frequência</div>
             </div>
             
             <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-orange-200">

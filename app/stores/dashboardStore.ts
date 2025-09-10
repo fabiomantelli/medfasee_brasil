@@ -84,7 +84,8 @@ export const useDashboardStore = create<DashboardState>()(devtools(
         state.pmuMeasurements = measurements;
         
         // Calcular estatísticas
-        const totalPMUs = measurements.length;
+        // Total PMUs = todas as PMUs do XML (não apenas as com dados válidos)
+        const totalPMUs = state.pmuService?.getAllPMUs().length || 0;
         const activePMUs = measurements.filter(pmu => pmu.status === 'active').length;
         const validFrequencies = measurements
           .filter(pmu => pmu.status === 'active' && pmu.frequency > 0)
