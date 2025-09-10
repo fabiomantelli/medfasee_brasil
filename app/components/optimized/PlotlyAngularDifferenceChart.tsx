@@ -16,7 +16,17 @@ const PMU_COLORS = [
 ];
 
 interface PlotlyAngularDifferenceChartProps {
-  systemData?: any;
+  systemData?: {
+    frequency: number;
+    timestamp: string;
+    status: 'normal' | 'warning' | 'critical' | 'disconnected';
+    regions: {
+      [key: string]: {
+        frequency: number;
+        status: 'normal' | 'warning' | 'critical' | 'disconnected';
+      };
+    };
+  };
 }
 
 const PlotlyAngularDifferenceChart: React.FC<PlotlyAngularDifferenceChartProps> = ({ systemData }) => {
@@ -28,7 +38,7 @@ const PlotlyAngularDifferenceChart: React.FC<PlotlyAngularDifferenceChartProps> 
   const [selectedPMUs, setSelectedPMUs] = useState<string[]>([]);
   const [referencePMU, setReferencePMU] = useState<string>('');
   
-  // Usar o mesmo hook que o componente ECharts
+  // Usar o hook de dados PMU
   const { measurements, allMeasurements, isRealDataConnected } = usePMUData();
   
   console.log('🔥🔥🔥 PLOTLY ANGULAR - Hook usePMUData result:');
@@ -37,13 +47,196 @@ const PlotlyAngularDifferenceChart: React.FC<PlotlyAngularDifferenceChartProps> 
   console.log('🔥🔥🔥 PLOTLY ANGULAR - isRealDataConnected:', isRealDataConnected);
   
   // Para o gráfico angular, usar allMeasurements para incluir PMUs disconnected também
-  let pmuData = allMeasurements && allMeasurements.length > 0 ? allMeasurements : measurements;
+  const pmuData = allMeasurements && allMeasurements.length > 0 ? allMeasurements : measurements;
   
   console.log('🔥🔥🔥 PLOTLY ANGULAR - pmuData after hook:', pmuData?.length || 0);
   
+  // Client-side mounting detection
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Process voltage data for polar chart
+  const polarData = useMemo(() => {
+    console.log('🔍🔍🔍 PLOTLY ANGULAR - PROCESSANDO DADOS POLARES!');
+    console.log('🔍 PLOTLY ANGULAR - pmuData:', pmuData);
+    console.log('🔍 PLOTLY ANGULAR - pmuData length:', pmuData?.length || 0);
+    
+    if (!pmuData || pmuData.length === 0) {
+      console.log('🔍 PLOTLY ANGULAR - No pmuData available');
+      return [];
+    }
+    
+    console.log('🔍 PLOTLY ANGULAR - Processing voltage data for', pmuData.length, 'PMUs');
+    console.log('🔍 PLOTLY ANGULAR - First PMU sample:', pmuData[0]);
+    
+    // Filter PMUs with valid voltage data
+    const validPMUs = pmuData.filter(pmu => {
+      console.log(`🔍 Checking PMU ${pmu.pmuId}:`, {
+        voltageA: pmu.voltageA,
+        hasVoltageA: !!pmu.voltageA,
+        magnitude: pmu.voltageA?.magnitude,
+        angle: pmu.voltageA?.angle,
+        magnitudeType: typeof pmu.voltageA?.magnitude,
+        angleType: typeof pmu.voltageA?.angle
+      });
+      
+      const hasVoltageA = pmu.voltageA && 
+                         typeof pmu.voltageA.magnitude === 'number' && 
+                         typeof pmu.voltageA.angle === 'number' &&
+                         !isNaN(pmu.voltageA.magnitude) && 
+                         !isNaN(pmu.voltageA.angle) &&
+                         pmu.voltageA.magnitude > 0;
+      
+      if (hasVoltageA) {
+        console.log(`✅ PMU ${pmu.pmuId}: Magnitude=${pmu.voltageA!.magnitude}, Angle=${pmu.voltageA!.angle}`);
+      } else {
+        console.log(`❌ PMU ${pmu.pmuId}: Invalid voltage data`, pmu.voltageA);
+      }
+      
+      return hasVoltageA;
+    });
+    
+    console.log(`📊📊📊 PLOTLY ANGULAR - Found ${validPMUs.length} PMUs with valid voltage data`);
+    
+    const result = validPMUs.map(pmu => {
+      // Calculate magnitude in PU (per unit) - Fórmula correta: tensão(módulo) / (tensão_base / sqrt(3))
+      // Exemplo: 132V / (220V / sqrt(3)) = 1.039 pu
+      const baseVoltageLineToNeutral = pmu.voltLevel / Math.sqrt(3); // Tensão fase-neutro em kV
+      const magnitudePU = pmu.voltageA!.magnitude / baseVoltageLineToNeutral;
+      
+      console.log(`📊 PMU ${pmu.pmuId}: Magnitude=${pmu.voltageA!.magnitude}kV, Base=${pmu.voltLevel}kV, BaseL-N=${baseVoltageLineToNeutral.toFixed(3)}kV, PU=${magnitudePU.toFixed(3)}`);
+      
+      return {
+        r: magnitudePU, // magnitude in per unit
+        theta: pmu.voltageA!.angle, // angle in degrees
+        name: pmu.pmuName || pmu.pmuId,
+        pmuId: pmu.pmuId,
+        magnitude: pmu.voltageA!.magnitude, // original magnitude in kV
+        angle: pmu.voltageA!.angle, // original angle in degrees
+        station: pmu.station,
+        state: pmu.state,
+        voltLevel: pmu.voltLevel
+      };
+    });
+    
+    console.log('📊📊📊 PLOTLY ANGULAR - Final polarData result:', result);
+    return result;
+  }, [pmuData]);
+
+  // Inicializar PMUs selecionadas (primeiras 5 por padrão)
+  useEffect(() => {
+    if (polarData && polarData.length > 0 && selectedPMUs.length === 0) {
+      const initialPMUs = polarData.slice(0, 5).map(pmu => pmu.pmuId);
+      setSelectedPMUs(initialPMUs);
+    }
+  }, [polarData, selectedPMUs.length]);
+
+  // Auto-select first PMU as reference if none selected
+  useEffect(() => {
+    if (!referencePMU && polarData.length > 0) {
+      setReferencePMU(polarData[0].pmuId);
+    }
+  }, [polarData, referencePMU]);
+
+  // Calculate relative angles when polar data or reference PMU changes
+  const relativeAngles = useMemo(() => {
+    if (!polarData.length || !referencePMU) {
+      return {};
+    }
+    
+    const referencePMUData = polarData.find(data => data.pmuId === referencePMU);
+    if (!referencePMUData) {
+      return {};
+    }
+    
+    const referenceAngle = referencePMUData.angle;
+    const angles: { [key: string]: number } = {};
+    
+    polarData.forEach(data => {
+      let relativeAngle = data.angle - referenceAngle;
+      // Normalize angle to [-180, 180]
+      while (relativeAngle > 180) relativeAngle -= 360;
+      while (relativeAngle < -180) relativeAngle += 360;
+      angles[data.pmuId] = relativeAngle;
+    });
+    
+    return angles;
+  }, [polarData, referencePMU]);
+
+  const togglePMU = useCallback((pmuId: string) => {
+    setSelectedPMUs(prev => 
+      prev.includes(pmuId) 
+        ? prev.filter(id => id !== pmuId)
+        : [...prev, pmuId]
+    );
+  }, []);
+
+  const getPMUColor = useCallback((pmuId: string): string => {
+    const pmuIndex = polarData.findIndex(pmu => pmu.pmuId === pmuId);
+    return PMU_COLORS[pmuIndex % PMU_COLORS.length];
+  }, [polarData]);
+
+  // Preparar dados para Plotly com fasores verdadeiros
+  const { plotlyData, plotlyAnnotations } = useMemo(() => {
+    console.log('🔍 PLOTLY ANGULAR - plotlyData useMemo triggered');
+    console.log('🔍 PLOTLY ANGULAR - polarData length:', polarData.length);
+    console.log('🔍 PLOTLY ANGULAR - selectedPMUs:', selectedPMUs);
+    console.log('🔍 PLOTLY ANGULAR - relativeAngles:', relativeAngles);
+    
+    if (!polarData.length || selectedPMUs.length === 0) {
+      console.log('🔍 PLOTLY ANGULAR - No polar data, returning empty');
+      return { plotlyData: [], plotlyAnnotations: [] };
+    }
+    
+    const selectedData = polarData.filter(data => selectedPMUs.includes(data.pmuId));
+    console.log('🔍 PLOTLY ANGULAR - Selected data length:', selectedData.length);
+    
+    if (selectedData.length === 0) {
+      console.log('🔍 PLOTLY ANGULAR - No selected data');
+      return { plotlyData: [], plotlyAnnotations: [] };
+    }
+    
+    // Criar dados para cada PMU selecionada como fasores verdadeiros
+    const traces = selectedData.map(data => {
+      const relativeAngle = relativeAngles[data.pmuId] || 0;
+      const color = getPMUColor(data.pmuId);
+      
+      // Normalizar magnitude (assumindo base de 1.0 pu)
+      const magnitudePU = data.magnitude / 1.0;
+      
+      return {
+        type: 'scatterpolar' as const,
+        mode: 'lines' as const,
+        r: [0, magnitudePU], // Do centro (0) até a magnitude normalizada
+        theta: [relativeAngle, relativeAngle], // Mesmo ângulo para linha reta
+        line: {
+          color: color,
+          width: 2 // Linha mais fina para visualização do vetor
+        },
+        name: data.name,
+        hovertemplate: `<b>${data.name}</b><br>` +
+                      `Magnitude: ${data.magnitude.toFixed(3)} V<br>` +
+                      `Ângulo: ${relativeAngle.toFixed(1)}°<br>` +
+                      `Magnitude (pu): ${magnitudePU.toFixed(3)}<br>` +
+                      `<extra></extra>`
+      };
+    });
+    
+    // Sem anotações de setas - vetores simples
+    const annotations: Array<{
+      x: number;
+      y: number;
+      text: string;
+      showarrow: boolean;
+      arrowhead?: number;
+      ax?: number;
+      ay?: number;
+    }> = [];
+    
+    console.log('📊📊📊 PLOTLY ANGULAR - Final traces:', traces);
+    return { plotlyData: traces, plotlyAnnotations: annotations };
+  }, [polarData, selectedPMUs, relativeAngles, getPMUColor]);
   
   // Retornar mensagem se não há conexão com webservice
   if (!isRealDataConnected) {
@@ -77,176 +270,18 @@ const PlotlyAngularDifferenceChart: React.FC<PlotlyAngularDifferenceChartProps> 
       </div>
     );
   }
-  
-  // Process voltage data for polar chart
-  const polarData = useMemo(() => {
-    console.log('🔍🔍🔍 PLOTLY ANGULAR - PROCESSANDO DADOS POLARES!');
-    console.log('🔍 PLOTLY ANGULAR - pmuData:', pmuData);
-    console.log('🔍 PLOTLY ANGULAR - pmuData length:', pmuData?.length || 0);
-    
-    if (!pmuData || pmuData.length === 0) {
-      console.log('🔍 PLOTLY ANGULAR - No pmuData available');
-      return [];
-    }
-    
-    console.log('🔍 PLOTLY ANGULAR - Processing voltage data for', pmuData.length, 'PMUs');
-    console.log('🔍 PLOTLY ANGULAR - First PMU sample:', pmuData[0]);
-    
-    // Filter PMUs with valid voltage data
-    const validPMUs = pmuData.filter(pmu => {
-      console.log(`🔍 PLOTLY Checking PMU ${pmu.pmuId}:`, {
-        voltageA: pmu.voltageA,
-        hasVoltageA: !!pmu.voltageA,
-        magnitude: pmu.voltageA?.magnitude,
-        angle: pmu.voltageA?.angle,
-      });
-      
-      return pmu.voltageA && 
-             typeof pmu.voltageA.magnitude === 'number' && 
-             typeof pmu.voltageA.angle === 'number' &&
-             !isNaN(pmu.voltageA.magnitude) && 
-             !isNaN(pmu.voltageA.angle) &&
-             pmu.voltageA.magnitude > 0;
-    });
-    
-    console.log('🔍 PLOTLY ANGULAR - Valid PMUs with voltage data:', validPMUs.length);
-    
-    if (validPMUs.length === 0) {
-      console.log('🔍 PLOTLY ANGULAR - No valid voltage data found');
-      return [];
-    }
-    
-    // Calculate normalized magnitudes
-    console.log('🔍 PLOTLY ANGULAR - Processing PMUs for PU calculation');
-    
-    const result = validPMUs.map(pmu => {
-      // Calculate magnitude in PU (per unit) - Fórmula correta: tensão(módulo) / (tensão_base / sqrt(3))
-      // Exemplo: 132V / (220V / sqrt(3)) = 1.039 pu
-      const baseVoltageLineToNeutral = pmu.voltLevel / Math.sqrt(3); // Tensão fase-neutro em kV
-      const magnitudePU = pmu.voltageA!.magnitude / baseVoltageLineToNeutral;
-      
-      console.log(`📊 PLOTLY PMU ${pmu.pmuId}: Magnitude=${pmu.voltageA!.magnitude}kV, Base=${pmu.voltLevel}kV, BaseL-N=${baseVoltageLineToNeutral.toFixed(3)}kV, PU=${magnitudePU.toFixed(3)}`);
-      return {
-        pmuId: pmu.pmuId,
-        pmuName: pmu.pmuName || `${pmu.station} (${pmu.state})` || `PMU ${pmu.pmuId}`,
-        magnitude: pmu.voltageA!.magnitude,
-        magnitudePU,
-        angle: pmu.voltageA!.angle,
-        station: pmu.station,
-        state: pmu.state,
-        voltLevel: pmu.voltLevel
-      };
-    });
-    
-    console.log('📊📊📊 PLOTLY ANGULAR - Final polarData result:', result);
-    return result;
-  }, [pmuData]);
-  
-  // Inicializar PMUs selecionadas (primeiras 5 por padrão)
-  useEffect(() => {
-    if (polarData && polarData.length > 0 && selectedPMUs.length === 0) {
-      const initialPMUs = polarData.slice(0, 5).map(pmu => pmu.pmuId);
-      setSelectedPMUs(initialPMUs);
-    }
-  }, [polarData, selectedPMUs.length]);
-  
-  // Auto-select first PMU as reference if none selected
-  useEffect(() => {
-    if (!referencePMU && polarData.length > 0) {
-      setReferencePMU(polarData[0].pmuId);
-    }
-  }, [polarData, referencePMU]);
-  
-  // Calculate relative angles when polar data or reference PMU changes
-  const relativeAngles = useMemo(() => {
-    if (!polarData.length || !referencePMU) {
-      return {};
-    }
-    
-    const referencePMUData = polarData.find(data => data.pmuId === referencePMU);
-    if (!referencePMUData) {
-      return {};
-    }
-    
-    const referenceAngle = referencePMUData.angle;
-    const angles: { [key: string]: number } = {};
-    
-    polarData.forEach(data => {
-      let relativeAngle = data.angle - referenceAngle;
-      // Normalize angle to [-180, 180]
-      while (relativeAngle > 180) relativeAngle -= 360;
-      while (relativeAngle < -180) relativeAngle += 360;
-      angles[data.pmuId] = relativeAngle;
-    });
-    
-    return angles;
-  }, [polarData, referencePMU]);
-  
-  const togglePMU = (pmuId: string) => {
-    setSelectedPMUs(prev => {
-      if (prev.includes(pmuId)) {
-        return prev.filter(id => id !== pmuId);
-      } else {
-        return [...prev, pmuId];
-      }
-    });
-  };
-  
-  // Get PMU color
-  const getPMUColor = useCallback((pmuId: string): string => {
-    const index = polarData.findIndex(pmu => pmu.pmuId === pmuId);
-    return PMU_COLORS[index % PMU_COLORS.length];
-  }, [polarData]);
-  
-  // Preparar dados para Plotly com fasores verdadeiros
-  const { plotlyData, plotlyAnnotations } = useMemo(() => {
-    console.log('🔍 PLOTLY ANGULAR - plotlyData useMemo triggered');
-    console.log('🔍 PLOTLY ANGULAR - polarData length:', polarData.length);
-    console.log('🔍 PLOTLY ANGULAR - selectedPMUs:', selectedPMUs);
-    console.log('🔍 PLOTLY ANGULAR - relativeAngles:', relativeAngles);
-    
-    if (!polarData.length || selectedPMUs.length === 0) {
-      console.log('🔍 PLOTLY ANGULAR - No polar data, returning empty');
-      return { plotlyData: [], plotlyAnnotations: [] };
-    }
-    
-    const selectedData = polarData.filter(data => selectedPMUs.includes(data.pmuId));
-    console.log('🔍 PLOTLY ANGULAR - Selected data length:', selectedData.length);
-    
-    if (selectedData.length === 0) {
-      console.log('🔍 PLOTLY ANGULAR - No selected data');
-      return { plotlyData: [], plotlyAnnotations: [] };
-    }
-    
-    // Criar dados para cada PMU selecionada como fasores verdadeiros
-    const traces = selectedData.map(data => {
-      const relativeAngle = relativeAngles[data.pmuId] || 0;
-      const color = getPMUColor(data.pmuId);
-      
-      return {
-        type: 'scatterpolar' as const,
-        mode: 'lines' as const,
-        r: [0, data.magnitudePU], // Do centro (0) até a magnitude
-        theta: [relativeAngle, relativeAngle], // Mesmo ângulo para linha reta
-        line: {
-          color: color,
-          width: 2 // Linha mais fina para visualização do vetor
-        },
-        name: data.pmuName,
-        hovertemplate: `<b>${data.pmuName}</b><br>` +
-                      `Magnitude: ${data.magnitude.toFixed(3)} V<br>` +
-                      `Ângulo: ${relativeAngle.toFixed(1)}°<br>` +
-                      `Magnitude (pu): ${data.magnitudePU.toFixed(3)}<br>` +
-                      `<extra></extra>`
-      };
-    });
-    
-    // Sem anotações de setas - vetores simples
-    const annotations: any[] = [];
-    
-    console.log('📊📊📊 PLOTLY ANGULAR - Final traces:', traces);
-    return { plotlyData: traces, plotlyAnnotations: annotations };
-  }, [polarData, selectedPMUs, relativeAngles, getPMUColor]);
+
+  // Show loading state only when client is not ready
+  if (!isClient) {
+    return (
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 flex items-center justify-center" style={{height: 'calc(100% - 4rem)'}}>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-600 text-sm">Carregando gráfico...</p>
+        </div>
+      </div>
+    );
+  }
   
   // Layout do Plotly otimizado para fasores com suporte a anotações
   const plotlyLayout = {
@@ -431,7 +466,7 @@ const PlotlyAngularDifferenceChart: React.FC<PlotlyAngularDifferenceChartProps> 
                       }`}
                       style={!isSelected ? { backgroundColor: color } : undefined}
                     ></div>
-                    <span>{pmu.pmuName || `PMU ${pmu.pmuId}`}</span>
+                    <span>{pmu.name || `PMU ${pmu.pmuId}`}</span>
                   </div>
                 </button>
               );
@@ -453,7 +488,7 @@ const PlotlyAngularDifferenceChart: React.FC<PlotlyAngularDifferenceChartProps> 
           >
             {(polarData || []).filter(pmu => selectedPMUs.includes(pmu.pmuId)).map(pmu => (
               <option key={pmu.pmuId} value={pmu.pmuId}>
-                {pmu.pmuName || `PMU ${pmu.pmuId}`}
+                {pmu.name || `PMU ${pmu.pmuId}`}
               </option>
             ))}
           </select>
@@ -494,7 +529,7 @@ const PlotlyAngularDifferenceChart: React.FC<PlotlyAngularDifferenceChartProps> 
             </div>
           </div>
           <div className="text-right">
-            <span>Referência: <span className="text-purple-600 font-medium">{polarData.find(p => p.pmuId === referencePMU)?.pmuName || referencePMU}</span></span>
+            <span>Referência: <span className="text-purple-600 font-medium">{polarData.find(p => p.pmuId === referencePMU)?.name || referencePMU}</span></span>
           </div>
         </div>
       </div>

@@ -148,7 +148,7 @@ async function fetchWithRetry(url: string, retries = 3, delay = 1000): Promise<R
          url.startsWith('/') ? url : `/${url}` // Ensure leading slash
        ];
       
-      let lastError: any;
+      let lastError: Error | null = null;
       for (const tryUrl of urls) {
         try {
           console.log(`🔍 XMLParser - Trying URL: ${tryUrl}`);

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense, useState, useEffect } from 'react';
-import { Responsive, WidthProvider, Layouts } from 'react-grid-layout';
+import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 // Lazy loading para componentes pesados - otimização de performance
@@ -21,10 +21,7 @@ const FrequencyChartComponent = dynamic(() => import('./components/optimized/Mem
 // Importação direta para debug
 import PlotlyAngularDifferenceChart from './components/optimized/PlotlyAngularDifferenceChart';
 
-// const AngularDifferenceChartComponent = dynamic(() => import('./components/optimized/MemoizedAngularDifferenceChart'), {
-//   loading: () => <div className="animate-pulse bg-gray-200 h-96 rounded-lg flex items-center justify-center"><span className="text-gray-500">📐 Carregando análise angular (Apache ECharts)...</span></div>,
-//   ssr: false
-// });
+// Componente ECharts removido - agora usando Plotly
 
 const MemoizedNotificationSystem = dynamic(() => import('./components/optimized/MemoizedNotificationSystem'), {
   loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded-lg"></div>,
@@ -51,7 +48,6 @@ const DashboardLayout = dynamic(() => import('./components/server/DashboardLayou
 // Dynamic imports for client-side components
 // const PMUInitializer = dynamic(() => import('./components/PMUInitializer'), { ssr: false });
 import { useDashboardInitialization, usePMUData, useLoadingState } from './hooks/useDashboard';
-import { useDashboardStore } from './stores/dashboardStore';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 

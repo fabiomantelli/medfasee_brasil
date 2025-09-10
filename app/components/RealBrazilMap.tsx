@@ -91,7 +91,14 @@ const MapComponent = ({}: OptimizedMapProps) => {
   const [selectedPMU, setSelectedPMU] = useState<MapFrequencyData | null>(null);
   
   // Componentes do Leaflet carregados estaticamente para melhor performance
-  const [leafletComponents, setLeafletComponents] = React.useState<any>(null);
+  const [leafletComponents, setLeafletComponents] = React.useState<{
+    MapContainer: React.ComponentType<React.PropsWithChildren<{ center: [number, number]; zoom: number; style: React.CSSProperties }>>;
+    TileLayer: React.ComponentType<{ url: string; attribution: string }>;
+    Marker: any;
+    Popup: React.ComponentType<React.PropsWithChildren<Record<string, never>>>;
+    CircleMarker: React.ComponentType<React.PropsWithChildren<{ center: [number, number]; radius: number; fillColor: string; color: string; weight: number; opacity: number; fillOpacity: number }>>;
+    L: typeof import('leaflet');
+  } | null>(null);
   
   React.useEffect(() => {
     if (isClient) {
@@ -103,7 +110,7 @@ const MapComponent = ({}: OptimizedMapProps) => {
         const { MapContainer, TileLayer, Marker, Popup, CircleMarker } = reactLeaflet;
         
         // Configurar ícones do Leaflet
-        delete (L.default as any).Icon.Default.prototype._getIconUrl;
+        delete (L.default as typeof L.default & { Icon: { Default: { prototype: { _getIconUrl?: unknown } } } }).Icon.Default.prototype._getIconUrl;
         L.default.Icon.Default.mergeOptions({
           iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
           iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
@@ -241,12 +248,6 @@ const MapComponent = ({}: OptimizedMapProps) => {
     console.log('🔥 MANAUS CHECK - Looking for Manaus in inactive PMUs:', inactivePMUs.filter(pmu => pmu.pmuName.toLowerCase().includes('manaus')));
   }
 
-  // Mostrar mapa sempre, mesmo sem dados do webservice
-  // O mapa aparece vazio no início e as PMUs aparecem conforme os dados chegam
-  const shouldShowMap = allPMUsFromXML.length > 0; // Só precisa do XML carregado
-  
-  // Não precisa mais de controle de carregamento inicial complexo
-
   // Função para renderizar o conteúdo do mapa baseado no estado
   const renderMapContent = () => {
     // Se o Leaflet ainda não carregou ou não há PMUs, mostrar carregamento do mapa
@@ -272,7 +273,6 @@ const MapComponent = ({}: OptimizedMapProps) => {
           center={[-14.2350, -51.9253]}
           zoom={4}
           style={{ height: '100%', width: '100%', borderRadius: '0.75rem' }}
-          className="leaflet-container"
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -364,6 +364,7 @@ const MapComponent = ({}: OptimizedMapProps) => {
       )}
     </div>
   ));
+  MapHeader.displayName = 'MapHeader';
 
   // Estrutura principal do painel sempre presente
   return (
