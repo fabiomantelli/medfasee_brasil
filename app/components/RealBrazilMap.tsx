@@ -46,6 +46,7 @@ const MapComponent = ({}: OptimizedMapProps) => {
   // Seletores otimizados - apenas re-renderiza quando dados específicos mudam
   const pmuMeasurements = useDashboardStore(state => state.pmuMeasurements);
   const isConnected = useDashboardStore(state => state.isRealDataConnected);
+  const isInitializing = useDashboardStore(state => state.isInitializing);
   const pmuService = useDashboardStore(state => state.pmuService);
   const setPmuMeasurements = useDashboardStore(state => state.setPmuMeasurements);
   
@@ -255,8 +256,8 @@ const MapComponent = ({}: OptimizedMapProps) => {
 
   // Função para renderizar o conteúdo do mapa baseado no estado
   const renderMapContent = () => {
-    // Se o webservice não está conectado, mostrar mensagem de erro
-    if (!isConnected) {
+    // Se o webservice não está conectado E não está inicializando, mostrar mensagem de erro
+    if (!isConnected && !isInitializing) {
       return (
         <div className="w-full h-full relative bg-gradient-to-br from-red-50 to-red-100 rounded-xl border border-red-200 overflow-hidden flex items-center justify-center">
           <div className="text-center p-8">
@@ -274,8 +275,8 @@ const MapComponent = ({}: OptimizedMapProps) => {
       );
     }
     
-    // Se o Leaflet ainda não carregou ou não há PMUs, mostrar carregamento do mapa
-    if (!isClient || !leafletComponents || realMeasurements.length === 0) {
+    // Se o Leaflet ainda não carregou, não há PMUs OU está inicializando, mostrar carregamento do mapa
+    if (!isClient || !leafletComponents || realMeasurements.length === 0 || isInitializing) {
       return (
         <div className="w-full h-full relative bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl border border-slate-300 overflow-hidden flex items-center justify-center">
           <div className="text-center p-8">

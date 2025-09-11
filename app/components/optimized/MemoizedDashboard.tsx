@@ -28,7 +28,7 @@ interface MemoizedDashboardProps {
  */
 const MemoizedDashboard = ({}: MemoizedDashboardProps) => {
   // Usar dados centralizados do Zustand store
-  const { stats, pmuMeasurements, isRealDataConnected } = useDashboardStore();
+  const { stats, pmuMeasurements, isRealDataConnected, isInitializing } = useDashboardStore();
   
   const totalPMUs = stats.totalPMUs;
   const activePMUs = stats.activePMUs;
@@ -38,8 +38,8 @@ const MemoizedDashboard = ({}: MemoizedDashboardProps) => {
   console.log('🔍 MemoizedDashboard - PMU Measurements from store:', pmuMeasurements?.length || 0);
   console.log('🔍 MemoizedDashboard - Real data connected:', isRealDataConnected);
 
-  // Estado de desconexão quando webservice não está disponível
-  if (!isRealDataConnected) {
+  // Estado de desconexão quando webservice não está disponível E não está inicializando
+  if (!isRealDataConnected && !isInitializing) {
     return (
       <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 sm:p-4 pb-4 sm:pb-6 flex flex-col" style={{height: 'calc(100% - 4rem)'}}>
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0 flex-shrink-0">
@@ -68,30 +68,42 @@ const MemoizedDashboard = ({}: MemoizedDashboardProps) => {
     );
   }
 
-  // Estado de carregamento quando não há PMUs conectadas
-  if (activePMUs === 0) {
+  // Se não há dados válidos OU está inicializando, mostrar carregamento
+  if (activePMUs === 0 || isInitializing || (pmuMeasurements && pmuMeasurements.length === 0)) {
+    const pmuCount = pmuMeasurements?.length || 0;
     return (
       <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 sm:p-4 pb-4 sm:pb-6 flex flex-col" style={{height: 'calc(100% - 4rem)'}}>
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0 flex-shrink-0">
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-gradient-to-r from-slate-700 to-slate-900 rounded-full animate-pulse"></div>
+            <div className="w-3 h-3 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full animate-pulse"></div>
             <h3 className="text-lg sm:text-xl font-bold text-gray-900">
               Alertas e Estatísticas
             </h3>
           </div>
         </div>
         
-        <div className="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-1 border border-slate-300 overflow-hidden flex items-center justify-center">
+        <div className="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl p-1 border border-slate-300 shadow-inner overflow-hidden flex items-center justify-center">
           <div className="text-center">
             <div className="text-gray-600 mb-2">
               <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <p className="text-gray-600 text-sm mb-1">⏳ Aguardando PMUs...</p>
-            <p className="text-gray-500 text-xs">
-              Nenhuma PMU enviando dados no momento
-            </p>
+            {pmuCount === 0 ? (
+              <>
+                <p className="text-gray-600 text-sm mb-1">⏳ Aguardando PMUs...</p>
+                <p className="text-gray-500 text-xs">
+                  Nenhuma PMU enviando dados no momento
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-600 text-sm mb-1">📊 Coletando dados...</p>
+                <p className="text-gray-500 text-xs">
+                  {pmuCount} PMU{pmuCount > 1 ? 's' : ''} conectada{pmuCount > 1 ? 's' : ''}, gerando dados...
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>

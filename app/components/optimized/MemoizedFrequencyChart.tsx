@@ -22,7 +22,7 @@ const PMU_COLORS = [
 
 // Component without React.memo for better performance with constantly changing data
 const FrequencyChartComponent = ({}: MemoizedFrequencyChartProps) => {
-  const { measurements, isRealDataConnected, allMeasurements } = usePMUData();
+  const { measurements, isRealDataConnected, allMeasurements, isInitializing } = usePMUData();
   const [isClient, setIsClient] = useState(false);
   const [availablePMUs, setAvailablePMUs] = useState<PMUMeasurement[]>([]);
   const [selectedPMUs, setSelectedPMUs] = React.useState<string[]>([]);
@@ -200,8 +200,8 @@ const FrequencyChartComponent = ({}: MemoizedFrequencyChartProps) => {
     .map(pmuId => ({ pmuId, data: pmuData[pmuId] || [] }))
     .filter(item => item.data.length > 0);
 
-  // Show loading state only when webservice is truly unavailable
-  if (!isClient || !isRealDataConnected) {
+  // Show loading state only when webservice is truly unavailable AND not initializing
+  if (!isClient || (!isRealDataConnected && !isInitializing)) {
     return (
       <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 sm:p-4 pb-4 sm:pb-6 flex flex-col" style={{height: 'calc(100% - 4rem)'}}>
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0 flex-shrink-0">
@@ -233,8 +233,8 @@ const FrequencyChartComponent = ({}: MemoizedFrequencyChartProps) => {
     );
   }
   
-  // Show waiting message when webservice is connected but no chart data yet
-  if (selectedData.length === 0) {
+  // Show waiting message when webservice is connected but no chart data yet OR still initializing
+  if (selectedData.length === 0 || isInitializing) {
     const pmuCount = measurements?.length || 0;
     return (
       <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 sm:p-4 pb-4 sm:pb-6 flex flex-col" style={{height: 'calc(100% - 4rem)'}}>

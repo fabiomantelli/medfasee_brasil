@@ -19,6 +19,7 @@ interface DashboardState {
   // Core services
   pmuService: PMUService | null;
   isRealDataConnected: boolean;
+  isInitializing: boolean;
   
   // Data state
   pmuMeasurements: PMUMeasurement[];
@@ -34,6 +35,7 @@ interface DashboardState {
   // Actions - agrupadas por funcionalidade
   setPmuService: (service: PMUService | null) => void;
   setIsRealDataConnected: (connected: boolean) => void;
+  setIsInitializing: (initializing: boolean) => void;
   setPmuMeasurements: (measurements: PMUMeasurement[]) => void;
   setRegionData: (data: RegionData[]) => void;
   setSelectedPMUs: (pmus: Set<string>) => void;
@@ -58,6 +60,7 @@ export const useDashboardStore = create<DashboardState>()(devtools(
       // Estado inicial otimizado
       pmuService: null,
       isRealDataConnected: false,
+      isInitializing: true,
       pmuMeasurements: [],
       regionData: [],
       selectedPMUs: new Set(),
@@ -78,6 +81,12 @@ export const useDashboardStore = create<DashboardState>()(devtools(
       
       setIsRealDataConnected: (connected) => set((state) => {
         state.isRealDataConnected = connected;
+        // Quando definimos o status de conexão, não estamos mais inicializando
+        state.isInitializing = false;
+      }),
+      
+      setIsInitializing: (initializing) => set((state) => {
+        state.isInitializing = initializing;
       }),
       
       setPmuMeasurements: (measurements) => set((state) => {

@@ -39,7 +39,7 @@ const PlotlyAngularDifferenceChart: React.FC<PlotlyAngularDifferenceChartProps> 
   const [referencePMU, setReferencePMU] = useState<string>('');
   
   // Usar o hook de dados PMU
-  const { measurements, allMeasurements, isRealDataConnected } = usePMUData();
+  const { measurements, allMeasurements, isRealDataConnected, isInitializing } = usePMUData();
   
   console.log('🔥🔥🔥 PLOTLY ANGULAR - Hook usePMUData result:');
   console.log('🔥🔥🔥 PLOTLY ANGULAR - measurements:', measurements?.length || 0);
@@ -259,8 +259,8 @@ const PlotlyAngularDifferenceChart: React.FC<PlotlyAngularDifferenceChartProps> 
     return { plotlyData: traces, plotlyAnnotations: annotations };
   }, [polarData, selectedPMUs, relativeAngles, getPMUColor]);
   
-  // Retornar mensagem se não há conexão com webservice
-  if (!isRealDataConnected) {
+  // Se não há conexão com dados reais E não está inicializando, mostrar mensagem de erro
+  if (!isRealDataConnected && !isInitializing) {
     return (
       <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 sm:p-4 pb-4 sm:pb-6 flex flex-col" style={{height: 'calc(100% - 4rem)'}}>
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0 flex-shrink-0">
@@ -270,7 +270,7 @@ const PlotlyAngularDifferenceChart: React.FC<PlotlyAngularDifferenceChartProps> 
               Diferença Angular
             </h3>
             <p className="text-xs sm:text-sm text-gray-500">
-              Fasores de Tensão
+              graus
             </p>
           </div>
         </div>
@@ -390,8 +390,8 @@ const PlotlyAngularDifferenceChart: React.FC<PlotlyAngularDifferenceChartProps> 
   console.log('🔍 PLOTLY Debug - selectedData.length:', selectedData.length);
   console.log('🔍 PLOTLY Debug - measurements?.length:', measurements?.length);
   
-  // Show waiting message when no PMUs are selected or no data available
-  if (selectedData.length === 0) {
+  // Se não há dados de tensão válidos OU está inicializando, mostrar carregamento
+  if (selectedData.length === 0 || isInitializing) {
     const pmuCount = measurements?.length || 0;
     return (
       <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 sm:p-4 pb-4 sm:pb-6 flex flex-col" style={{height: 'calc(100% - 4rem)'}}>
@@ -421,18 +421,11 @@ const PlotlyAngularDifferenceChart: React.FC<PlotlyAngularDifferenceChartProps> 
                   Nenhuma PMU enviando dados no momento
                 </p>
               </>
-            ) : polarData.length === 0 ? (
+            ) : (
               <>
                 <p className="text-gray-600 text-sm mb-1">📊 Coletando dados de tensão...</p>
                 <p className="text-gray-500 text-xs">
-                  {pmuCount} PMU{pmuCount > 1 ? 's' : ''} conectada{pmuCount > 1 ? 's' : ''}, aguardando dados de tensão...
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="text-gray-600 text-sm mb-1">📐 Nenhuma PMU selecionada</p>
-                <p className="text-gray-500 text-xs">
-                  Selecione PMUs para visualizar os fasores de tensão
+                  {pmuCount} PMU{pmuCount > 1 ? 's' : ''} conectada{pmuCount > 1 ? 's' : ''}, construindo gráfico polar...
                 </p>
               </>
             )}

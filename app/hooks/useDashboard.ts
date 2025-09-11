@@ -43,6 +43,7 @@ export const usePMUData = () => {
   const regionData = useDashboardStore(state => state.regionData);
   const stats = useDashboardStore(state => state.stats);
   const isRealDataConnected = useDashboardStore(state => state.isRealDataConnected);
+  const isInitializing = useDashboardStore(state => state.isInitializing);
   
   // Memoização otimizada para medições válidas
   const validMeasurements = useMemo(() => 
@@ -55,7 +56,8 @@ export const usePMUData = () => {
     allMeasurements: pmuMeasurements,
     regionData,
     stats,
-    isRealDataConnected
+    isRealDataConnected,
+    isInitializing
   };
 };
 
