@@ -464,9 +464,35 @@ const PlotlyAngularDifferenceChart: React.FC<PlotlyAngularDifferenceChartProps> 
         </div>
         
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-2 sm:p-3 w-full sm:w-[27.3rem] border border-gray-200 shadow-inner">
-          <h4 className="text-sm font-medium text-gray-700 mb-2">
-            Selecionar PMUs para Visualização
-          </h4>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-medium text-gray-700">
+              Selecionar PMUs para Visualização
+            </h4>
+            <div className="flex gap-1">
+              <button
+                onClick={() => {
+                  const allPMUIds = (polarData || []).map(pmu => pmu.pmuId);
+                  setSelectedPMUs(allPMUIds);
+                }}
+                className="px-2 py-1 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-md transition-colors duration-200"
+              >
+                Habilitar todas
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedPMUs([]);
+                  // Após desabilitar todas, selecionar as 5 primeiras por padrão
+                  setTimeout(() => {
+                    const firstFivePMUs = (polarData || []).slice(0, 5).map(pmu => pmu.pmuId);
+                    setSelectedPMUs(firstFivePMUs);
+                  }, 100);
+                }}
+                className="px-2 py-1 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-md transition-colors duration-200"
+              >
+                Desabilitar todas
+              </button>
+            </div>
+          </div>
           <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto scrollbar-thin p-1">
             {(polarData || []).map((pmu, index) => {
               const isSelected = selectedPMUs.includes(pmu.pmuId);
