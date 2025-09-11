@@ -19,9 +19,10 @@ export const useDashboardInitialization = () => {
   }, []);
   
   // Memoized states para evitar re-renders desnecessários
+  // CORREÇÃO: Dashboard deve carregar mesmo com problemas de conexão
   const isInitialized = useMemo(() => 
-    isClient && !!pmuService && isRealDataConnected,
-    [isClient, pmuService, isRealDataConnected]
+    isClient && !!pmuService,
+    [isClient, pmuService]
   );
   
   const isLoading = useMemo(() => 
@@ -84,15 +85,14 @@ export const usePMUSelection = () => {
 
 /**
  * Hook minimalista para estado de loading
- * Removido estado desnecessário de layouts
+ * CORREÇÃO: Loading apenas quando PMU Service não existe
  */
 export const useLoadingState = () => {
   const pmuService = useDashboardStore(state => state.pmuService);
-  const isRealDataConnected = useDashboardStore(state => state.isRealDataConnected);
   
   const isLoading = useMemo(() => 
-    !pmuService || !isRealDataConnected,
-    [pmuService, isRealDataConnected]
+    !pmuService,
+    [pmuService]
   );
   
   return { isLoading };

@@ -255,6 +255,25 @@ const MapComponent = ({}: OptimizedMapProps) => {
 
   // Função para renderizar o conteúdo do mapa baseado no estado
   const renderMapContent = () => {
+    // Se o webservice não está conectado, mostrar mensagem de erro
+    if (!isConnected) {
+      return (
+        <div className="w-full h-full relative bg-gradient-to-br from-red-50 to-red-100 rounded-xl border border-red-200 overflow-hidden flex items-center justify-center">
+          <div className="text-center p-8">
+            <div className="text-red-600 mb-2">
+               <svg className="w-16 h-16 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+               </svg>
+             </div>
+            <p className="text-red-600 text-sm mb-1">🔌 Webservice indisponível</p>
+            <p className="text-red-500 text-xs">
+              Não é possível exibir o mapa sem conexão real
+            </p>
+          </div>
+        </div>
+      );
+    }
+    
     // Se o Leaflet ainda não carregou ou não há PMUs, mostrar carregamento do mapa
     if (!isClient || !leafletComponents || realMeasurements.length === 0) {
       return (

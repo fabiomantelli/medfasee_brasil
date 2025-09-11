@@ -38,8 +38,14 @@ function PMUInitializerCore() {
             setPmuMeasurements(measurements);
           });
           
+          // Subscribe to connection status updates
+          service.subscribeToConnectionStatus((connected) => {
+            console.log('🔌 PMUInitializer - Status de conexão atualizado:', connected);
+            setIsRealDataConnected(connected);
+          });
+          
           setPmuService(service);
-          setIsRealDataConnected(true);
+          // Não forçar true aqui - deixar o callback controlar o status
           
           console.log('🚀 PMUInitializer - Iniciando polling...');
           service.start();
@@ -94,6 +100,12 @@ function PMUInitializerCore() {
         service.subscribe((measurements) => {
           console.log('📊 PMUInitializer - Dados recebidos:', measurements.length, 'PMUs');
           setPmuMeasurements(measurements);
+        });
+        
+        // Subscribe to connection status updates
+        service.subscribeToConnectionStatus((connected) => {
+          console.log('🔌 PMUInitializer - Status de conexão atualizado:', connected);
+          setIsRealDataConnected(connected);
         });
         
         setPmuService(service);

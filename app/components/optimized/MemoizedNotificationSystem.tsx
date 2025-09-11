@@ -29,60 +29,66 @@ const MemoizedNotificationSystem = ({ systemData }: MemoizedNotificationSystemPr
   const notifications = React.useMemo(() => {
     const alerts = [];
     
-    // Status do sistema
-    if (systemData.status === 'critical') {
-      alerts.push({
-        id: 'system-critical',
-        type: 'error' as const,
-        title: 'Sistema Crítico',
-        message: `Frequência fora dos limites seguros: ${systemData.frequency.toFixed(3)} Hz`,
-        timestamp: new Date(systemData.timestamp)
-      });
-    } else if (systemData.status === 'warning') {
-      alerts.push({
-        id: 'system-warning',
-        type: 'warning' as const,
-        title: 'Atenção no Sistema',
-        message: `Frequência em estado de alerta: ${systemData.frequency.toFixed(3)} Hz`,
-        timestamp: new Date(systemData.timestamp)
-      });
+    // Status do sistema (só mostrar se há conexão real)
+    if (isRealDataConnected) {
+      if (systemData.status === 'critical') {
+        alerts.push({
+          id: 'system-critical',
+          type: 'error' as const,
+          title: 'Sistema Crítico',
+          message: `Frequência fora dos limites seguros: ${systemData.frequency.toFixed(3)} Hz`,
+          timestamp: new Date(systemData.timestamp)
+        });
+      } else if (systemData.status === 'warning') {
+        alerts.push({
+          id: 'system-warning',
+          type: 'warning' as const,
+          title: 'Atenção no Sistema',
+          message: `Frequência em estado de alerta: ${systemData.frequency.toFixed(3)} Hz`,
+          timestamp: new Date(systemData.timestamp)
+        });
+      }
     }
     
     // Status da conexão
     if (!isRealDataConnected) {
       alerts.push({
-        id: 'connection-simulated',
-        type: 'info' as const,
-        title: 'Dados Simulados',
-        message: 'Sistema operando com dados simulados',
+        id: 'connection-disconnected',
+        type: 'error' as const,
+        title: 'Webservice Indisponível',
+        message: 'Não é possível exibir notificações sem conexão real',
         timestamp: new Date(systemData.timestamp)
       });
     }
     
-    // PMUs inativas
-    const inactivePMUs = stats.totalPMUs - stats.activePMUs;
-    if (inactivePMUs > 0) {
-      alerts.push({
-        id: 'pmus-inactive',
-        type: 'warning' as const,
-        title: 'PMUs Inativas',
-        message: `${inactivePMUs} PMUs sem dados válidos`,
-        timestamp: new Date(systemData.timestamp)
-      });
-    }
-    
-    // Regiões com problemas
-    Object.entries(systemData.regions).forEach(([region, data]) => {
-      if (data.status === 'critical') {
+    // PMUs inativas (só mostrar se há conexão real)
+    if (isRealDataConnected) {
+      const inactivePMUs = stats.totalPMUs - stats.activePMUs;
+      if (inactivePMUs > 0) {
         alerts.push({
-          id: `region-${region}`,
-          type: 'error' as const,
-          title: `Região ${region.charAt(0).toUpperCase() + region.slice(1)}`,
-          message: `Frequência crítica: ${data.frequency.toFixed(3)} Hz`,
+          id: 'pmus-inactive',
+          type: 'warning' as const,
+          title: 'PMUs Inativas',
+          message: `${inactivePMUs} PMUs sem dados válidos`,
           timestamp: new Date(systemData.timestamp)
         });
       }
-    });
+    }
+    
+    // Regiões com problemas (só mostrar se há conexão real)
+    if (isRealDataConnected) {
+      Object.entries(systemData.regions).forEach(([region, data]) => {
+        if (data.status === 'critical') {
+          alerts.push({
+            id: `region-${region}`,
+            type: 'error' as const,
+            title: `Região ${region.charAt(0).toUpperCase() + region.slice(1)}`,
+            message: `Frequência crítica: ${data.frequency.toFixed(3)} Hz`,
+            timestamp: new Date(systemData.timestamp)
+          });
+        }
+      });
+    }
     
     return alerts.slice(0, 5); // Limitar a 5 notificações
   }, [systemData, isRealDataConnected, stats]);

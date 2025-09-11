@@ -48,11 +48,14 @@ export class PMUService {
   private config: WebServiceConfig;
   private pmus: PMUData[];
   private observers: ((measurements: PMUMeasurement[]) => void)[] = [];
+  private connectionStatusCallback: ((connected: boolean) => void) | null = null;
   private pollingInterval: NodeJS.Timeout | null = null;
   private isPolling = false;
   private lastMeasurements: PMUMeasurement[] = [];
   private debounceTimeout: NodeJS.Timeout | null = null;
   private pendingUpdate = false;
+  private lastConnectionStatus: boolean | null = null;
+  private connectionStatusDebounceTimeout: NodeJS.Timeout | null = null;
 
   constructor(config: WebServiceConfig, pmus: PMUData[]) {
     this.config = config;
@@ -164,6 +167,10 @@ export class PMUService {
     };
   }
 
+  public subscribeToConnectionStatus(callback: (connected: boolean) => void): void {
+    this.connectionStatusCallback = callback;
+  }
+
   private notifyObservers(measurements: PMUMeasurement[]) {
     console.log(`🔔 PMU Service - notifyObservers called with ${measurements.length} measurements`);
     console.log(`🔔 PMU Service - ${this.observers.length} observers registered`);
@@ -174,9 +181,36 @@ export class PMUService {
         callback(measurements);
         console.log(`✅ PMU Service - Observer ${index + 1} executed successfully`);
       } catch (error) {
-        console.error(`❌ PMU Service - Error in observer ${index + 1} callback:`, error);
+        console.log(`❌ PMU Service - Error in observer ${index + 1} callback:`, error);
       }
     });
+  }
+
+  private updateConnectionStatus(connected: boolean): void {
+    // Evitar chamadas duplicadas do mesmo status
+    if (this.lastConnectionStatus === connected) {
+      console.log(`🔌 PMU Service - Status ${connected} já definido, ignorando chamada duplicada`);
+      return;
+    }
+
+    // Debounce para evitar múltiplas chamadas em sequência rápida
+    if (this.connectionStatusDebounceTimeout) {
+      clearTimeout(this.connectionStatusDebounceTimeout);
+    }
+
+    this.connectionStatusDebounceTimeout = setTimeout(() => {
+      console.log(`🔌 PMU Service - updateConnectionStatus chamado com: ${connected}`);
+      console.log(`🔌 PMU Service - Callback existe: ${!!this.connectionStatusCallback}`);
+      
+      if (this.connectionStatusCallback) {
+        console.log(`🔌 PMU Service - EXECUTANDO callback com status: ${connected}`);
+        this.connectionStatusCallback(connected);
+        console.log(`🔌 PMU Service - Callback executado com sucesso`);
+        this.lastConnectionStatus = connected;
+      } else {
+        console.warn(`⚠️ PMU Service - Nenhum callback registrado para status de conexão`);
+      }
+    }, 1000); // Debounce de 1 segundo
   }
 
   private async startPolling() {
@@ -213,7 +247,7 @@ export class PMUService {
         const cycleDuration = cycleEnd.getTime() - cycleStart.getTime();
         console.log(`✅ PMU Service - Ciclo concluído em ${cycleDuration}ms`);
       } catch (error) {
-        console.error('❌ PMU Service - Erro no ciclo:', error);
+        console.log('❌ PMU Service - Erro no ciclo:', error);
       }
     }, 5000);
     console.log('✅ PMU Service - Interval configurado com sucesso');
@@ -223,6 +257,10 @@ export class PMUService {
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval);
       this.pollingInterval = null;
+    }
+    if (this.connectionStatusDebounceTimeout) {
+      clearTimeout(this.connectionStatusDebounceTimeout);
+      this.connectionStatusDebounceTimeout = null;
     }
     this.isPolling = false;
     console.log('⏹️ PMU Service - Stopped automatic polling');
@@ -247,8 +285,8 @@ export class PMUService {
       this.notifyObservers(measurements);
       console.log(`🚨 PMU Service - DEPOIS DE NOTIFICAR OBSERVERS`);
     } catch (error) {
-      console.error('❌ PMU Service - Erro ao buscar dados:', error);
-      console.error('❌ PMU Service - Stack trace:', (error as Error).stack);
+      console.log('❌ PMU Service - Erro ao buscar dados:', error);
+      console.log('❌ PMU Service - Stack trace:', (error as Error).stack);
     }
   }
 
@@ -310,6 +348,7 @@ export class PMUService {
     console.log(`🔍 PMU Service - Splitting into ${batches.length} batches of max ${BATCH_SIZE} IDs each`);
     
     const allDataPoints: TimeSeriesDataPoint[] = [];
+    let hasErrors = false; // Rastrear se houve erros durante o processamento
     
     try {
       // Process batches sequentially with delay to avoid overwhelming the server
@@ -340,9 +379,12 @@ export class PMUService {
           
           // Adicionar timeout mais generoso para evitar ERR_ABORTED
             const controller = new AbortController();
+            let isCompleted = false;
             const timeoutId = setTimeout(() => {
-              console.warn(`⏰ PMU Service - Timeout para batch ${i + 1} após 30 segundos`);
-              controller.abort();
+              if (!isCompleted) {
+                console.log(`⏰ PMU Service - Timeout para batch ${i + 1} após 30 segundos`);
+                controller.abort();
+              }
             }, 30000); // 30 segundos timeout
             
             const response = await fetch(fullUrl, {
@@ -354,12 +396,18 @@ export class PMUService {
               signal: controller.signal
             });
             
+            isCompleted = true;
             clearTimeout(timeoutId);
 
           console.log(`🔍 PMU Service - Batch ${i + 1} response status:`, response.status);
           
           if (!response.ok) {
             console.warn(`🔍 PMU Service - Batch ${i + 1} failed with status ${response.status}`);
+            hasErrors = true;
+            if (response.status === 500) {
+              console.log(`🔌 PMU Service - DETECTADO STATUS 500 - CHAMANDO updateConnectionStatus(false)`);
+              this.updateConnectionStatus(false);
+            }
             continue; // Skip this batch but continue with others
           }
 
@@ -376,16 +424,26 @@ export class PMUService {
           }
           
         } catch (error) {
+          console.log(`❌ PMU Service - ERRO CAPTURADO no batch ${i + 1}:`, error);
+          hasErrors = true;
           if (error instanceof Error) {
             if (error.name === 'AbortError') {
-              console.warn(`⏰ PMU Service - Batch ${i + 1} foi cancelado por timeout`);
+              console.log(`⏰ PMU Service - Batch ${i + 1} foi cancelado por timeout`);
+              console.log(`🔌 PMU Service - CHAMANDO updateConnectionStatus(false) por timeout`);
+              this.updateConnectionStatus(false);
             } else if (error.message.includes('Failed to fetch')) {
-              console.error(`🌐 PMU Service - Erro de rede no batch ${i + 1}:`, error.message);
+              console.log(`🌐 PMU Service - Erro de rede no batch ${i + 1}:`, error.message);
+              console.log(`🔌 PMU Service - CHAMANDO updateConnectionStatus(false) por erro de rede`);
+              this.updateConnectionStatus(false);
             } else {
-              console.error(`🔍 PMU Service - Erro desconhecido no batch ${i + 1}:`, error);
+              console.log(`🔍 PMU Service - Erro desconhecido no batch ${i + 1}:`, error);
+              console.log(`🔌 PMU Service - CHAMANDO updateConnectionStatus(false) por erro desconhecido`);
+              this.updateConnectionStatus(false);
             }
           } else {
-            console.error(`🔍 PMU Service - Error fetching batch ${i + 1}:`, error);
+            console.log(`🔍 PMU Service - Error fetching batch ${i + 1}:`, error);
+            console.log(`🔌 PMU Service - CHAMANDO updateConnectionStatus(false) por erro genérico`);
+            this.updateConnectionStatus(false);
           }
           // Continue with other batches even if one fails
         }
@@ -395,6 +453,20 @@ export class PMUService {
       
       console.log(`✅ PMU Service - getCurrentData completed with ${allDataPoints.length} total data points`);
       
+      // Update connection status based on results and errors
+      // Só considerar conectado se há dados E não houve erros
+      if (allDataPoints.length > 0 && !hasErrors) {
+        console.log(`🔌 PMU Service - Conexão OK: dados recebidos sem erros`);
+        this.updateConnectionStatus(true);
+      } else {
+        if (hasErrors) {
+          console.log(`🔌 PMU Service - Conexão com problemas: erros detectados durante processamento`);
+        } else {
+          console.log(`🔌 PMU Service - Conexão com problemas: nenhum dado recebido`);
+        }
+        this.updateConnectionStatus(false);
+      }
+      
       // If no data was retrieved from webservice, return empty array (no mock data)
       if (allDataPoints.length === 0) {
         console.log('🔍 PMU Service - No data from webservice, returning empty array (no mock data)');
@@ -403,7 +475,8 @@ export class PMUService {
       
       return allDataPoints;
     } catch (error) {
-      console.error(`❌ PMU Service - Error in getCurrentData:`, error);
+      console.log(`❌ PMU Service - Error in getCurrentData:`, error);
+      this.updateConnectionStatus(false);
       return [];
     }
   }
